@@ -18,12 +18,24 @@ WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
 RED = (255, 0, 0)
 BLUE=(0,0,255)
-screen_width=700
-screen_height=500
-# Set the width and height of the screen [width, height]
+
 size = (700, 500)
 screen = pg.display.set_mode(size)
+
+
+
 pg.init()
+# viewport=pg.display.get_surface().get_rect()
+# level = pg.Surface((700,500)).convert()
+# level_rect = level.get_rect()
+
+
+class Block(pg.sprite.Sprite):
+    def __init__(self,color,width,height,position):
+        self.image=pg.Surface([width,height])
+        self.image(color)
+        self.rect=self.image.get_rect(topleft=position)
+
 
 
 
@@ -43,7 +55,8 @@ class Player(pg.sprite.Sprite):
         self.state = 0
 
 
-
+    def get_position(self):
+        return self.rect
 
     def enter_jump(self):
         self.state=1
@@ -97,6 +110,9 @@ class Player(pg.sprite.Sprite):
 
 
 
+
+
+
 player=Player(RED,30,30)
 all_sprites_list=pg.sprite.Group()
 all_sprites_list.add(player)
@@ -104,8 +120,9 @@ all_sprites_list.add(player)
 font = pg.font.SysFont('Calibri', 25, True, False)
 # Used to manage how fast the screen updates
 clock = pg.time.Clock()
-#pg.mouse.set_visible(False)
-background_image = pg.image.load("generic_platformer_tiles.png").convert()
+
+
+
 # -------- Main Program Loop -----------
 done=False
 
@@ -123,18 +140,21 @@ while not done:
     screen.fill(WHITE)
 
 
-    screen.blit(background_image, [0,0])
+
     all_sprites_list.update()
     all_sprites_list.draw(screen)
     bridge=False
     if(340>player.rect.x>270 and player.rect.y>350):
         bridge=True
         pg.draw.line(screen, GREEN, [210,409], [347, 381], 5)
-    if(210<player.rect.x<340 and player.rect.y>=380 and not bridge):
-        player.fall()
-    if(500<player.rect.x<550 and player.rect.y+30>380):
-        player.fall()
+    # if(210<player.rect.x<340 and player.rect.y>=380 and not bridge):
+    #     player.fall()
+    # if(500<player.rect.x<550 and player.rect.y+30>380):
+    #     player.fall()
     pg.draw.line(screen, GREEN, [487,377], [557, 408], 5)
+
+    # viewport.center=player.rect.center
+    # viewport.clamp_ip(level_rect)
     # --- Screen-clearing code goes here
 
     # Here, we clear the screen to white. Don't put other drawing commands
