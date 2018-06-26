@@ -25,7 +25,7 @@ screen = pg.display.set_mode(size)
 
 
 pg.init()
-# viewport=pg.display.get_surface().get_rect()
+
 # level = pg.Surface((700,500)).convert()
 # level_rect = level.get_rect()
 
