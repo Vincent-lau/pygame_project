@@ -1,0 +1,13 @@
+create my own background rather than using a picture as my background
+
+
+
+player ability
+move jump
+attack
+
+enemy
+attributes
+move
+attack
+
