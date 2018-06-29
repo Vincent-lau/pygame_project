@@ -19,34 +19,33 @@ GREEN = (0, 255, 0)
 RED = (255, 0, 0)
 BLUE=(0,0,255)
 
-size = (700, 500)
-screen = pg.display.set_mode(size)
+screenSize = (700, 500)
+screen = pg.display.set_mode(screenSize)
 
 
 
 pg.init()
 
-# level = pg.Surface((700,500)).convert()
-# level_rect = level.get_rect()
 
 
 class Block(pg.sprite.Sprite):
-    def __init__(self,color,width,height,position):
-        self.image=pg.Surface([width,height])
-        self.image(color)
+    def __init__(self,color,size,position):
+        super().__init__()
+        self.image=pg.Surface(size)
+        self.image.fill(color)
         self.rect=self.image.get_rect(topleft=position)
 
 
 
 
 class Player(pg.sprite.Sprite):
-    def __init__(self,color,width,height):
+    def __init__(self,color,size):
         super().__init__()
-        self.image=pg.Surface([width,height])
+        self.image=pg.Surface(size)
         self.image.fill(color)
         self.rect=self.image.get_rect()
-        self.rect.x=10
-        self.rect.y=380
+        self.rect.x=0
+        self.rect.y=450-size[1]
         self.jumpPower=9
 
         self.grav = 0.4
@@ -59,8 +58,9 @@ class Player(pg.sprite.Sprite):
         return self.rect
 
     def enter_jump(self):
-        self.state=1
-        self.y_vel=-self.jumpPower
+        if(self.state!=1):
+            self.state=1
+            self.y_vel=-self.jumpPower
 
 
 
@@ -76,18 +76,16 @@ class Player(pg.sprite.Sprite):
             self.rect.move_ip(3,0)
 
 
-    def platform(self):
-        if(0<self.rect.x<211 and self.rect.y>380):
-            self.rect.y=380
-        if(344<self.rect.x<494 and self.rect.y>381):
-            self.oriY=self.rect.y=381-30
-        if(559<self.rect.x<697-30 and (408-30-20>self.rect.y or self.rect.y>408-30)):
-            self.oriY=self.rect.y=408-30
+    def collision_below(self):
+        if(pg.sprite.spritecollideany(player,grounds)):
+            self.rect.y -=1    #this is not very good way of moving back one step
+            self.state=0
+            self.y_vel=0
 
 
 
     def physics_update(self):
-        if(self.rect.y+50>size[1]):
+        if(self.rect.y>screenSize[1]):
             self.y_vel=0
 
 
@@ -105,17 +103,24 @@ class Player(pg.sprite.Sprite):
 
 
     def update(self):
-        self.rect.move_ip(self.x_vel,self.y_vel)
         self.physics_update()
+        self.collision_below()
+        self.rect.move_ip(self.x_vel,self.y_vel)
 
 
 
 
 
 
-player=Player(RED,30,30)
 all_sprites_list=pg.sprite.Group()
+
+player=Player(RED,(30,30))
+grounds=pg.sprite.Group()
+grounds.add(Block(BLACK,(100,50),(0,450)),Block(BLACK,(50,50),(650,450)))
+
 all_sprites_list.add(player)
+all_sprites_list.add(Block(BLACK,(100,50),(0,450)),Block(BLACK,(50,50),(650,450)))
+
 
 font = pg.font.SysFont('Calibri', 25, True, False)
 # Used to manage how fast the screen updates
@@ -143,14 +148,7 @@ while not done:
 
     all_sprites_list.update()
     all_sprites_list.draw(screen)
-    bridge=False
-    if(340>player.rect.x>270 and player.rect.y>350):
-        bridge=True
-        pg.draw.line(screen, GREEN, [210,409], [347, 381], 5)
-    # if(210<player.rect.x<340 and player.rect.y>=380 and not bridge):
-    #     player.fall()
-    # if(500<player.rect.x<550 and player.rect.y+30>380):
-    #     player.fall()
+
     pg.draw.line(screen, GREEN, [487,377], [557, 408], 5)
 
     # viewport.center=player.rect.center
