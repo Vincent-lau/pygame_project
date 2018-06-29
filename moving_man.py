@@ -51,7 +51,7 @@ class Player(pg.sprite.Sprite):
         self.grav = 0.4
         self.x_vel = 0
         self.y_vel = 0
-        self.state = 0
+        self.state = 0   #0:stationary 1:rising 2:falling
 
 
     def get_position(self):
@@ -66,7 +66,7 @@ class Player(pg.sprite.Sprite):
 
     def enter_fall(self):
         self.state=2
-        self.y_vel=0
+       # self.y_vel=0
 
 
     def tracking_key(self,keys):
@@ -78,10 +78,11 @@ class Player(pg.sprite.Sprite):
 
     def collision_below(self):
         if(pg.sprite.spritecollideany(player,grounds)):
-            self.rect.y -=1    #this is not very good way of moving back one step
+            self.rect.y -=1   #this is not very good way of moving back one step
             self.state=0
             self.y_vel=0
-
+        else:
+            self.enter_fall()
 
 
     def physics_update(self):
@@ -145,6 +146,7 @@ while not done:
     screen.fill(WHITE)
 
 
+    print(player.state)
 
     all_sprites_list.update()
     all_sprites_list.draw(screen)
