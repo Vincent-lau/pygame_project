@@ -21,9 +21,6 @@ BLUE=(0,0,255)
 
 screenSize = (700, 500)
 screen = pg.display.set_mode(screenSize)
-
-
-
 pg.init()
 
 
@@ -44,6 +41,7 @@ class Player(pg.sprite.Sprite):
         self.image=pg.Surface(size)
         self.image.fill(color)
         self.rect=self.image.get_rect()
+        self.size=self.image.get_size()
         self.rect.x=0
         self.rect.y=450-size[1]
         self.jumpPower=9
@@ -57,8 +55,11 @@ class Player(pg.sprite.Sprite):
     def get_position(self):
         return self.rect
 
+    def get_size(self):
+        return self.size
+
     def enter_jump(self):
-        if(self.state!=1):
+        if(self.state==0):
             self.state=1
             self.y_vel=-self.jumpPower
 
@@ -66,7 +67,7 @@ class Player(pg.sprite.Sprite):
 
     def enter_fall(self):
         self.state=2
-       # self.y_vel=0
+
 
 
     def tracking_key(self,keys):
@@ -77,12 +78,10 @@ class Player(pg.sprite.Sprite):
 
 
     def collision_below(self):
-        if(pg.sprite.spritecollideany(player,grounds)):
+        if(pg.sprite.spritecollideany(self,grounds)):
             self.rect.y -=1   #this is not very good way of moving back one step
             self.state=0
             self.y_vel=0
-        else:
-            self.enter_fall()
 
 
     def physics_update(self):
@@ -112,7 +111,6 @@ class Player(pg.sprite.Sprite):
 
 
 
-
 all_sprites_list=pg.sprite.Group()
 
 player=Player(RED,(30,30))
@@ -121,6 +119,19 @@ grounds.add(Block(BLACK,(100,50),(0,450)),Block(BLACK,(50,50),(650,450)))
 
 all_sprites_list.add(player)
 all_sprites_list.add(Block(BLACK,(100,50),(0,450)),Block(BLACK,(50,50),(650,450)))
+
+
+
+def level_control(player,grounds):
+    player.pos=player.get_position()
+    if(player.pos.x>100 and player.pos.x+player.get_size()[0]<650):
+        if(not pg.sprite.spritecollideany(player,grounds)):
+            player.enter_fall()
+    #
+    # if(130<player.pos.x<150 and 440<player.pos.y<450):
+    #     b=Block(GREEN,(550,10),(100,450))
+    #     grounds.add(b)
+    #     all_sprites_list(b)
 
 
 font = pg.font.SysFont('Calibri', 25, True, False)
@@ -147,11 +158,11 @@ while not done:
 
 
     print(player.state)
-
+    level_control(player,grounds)
     all_sprites_list.update()
     all_sprites_list.draw(screen)
 
-    pg.draw.line(screen, GREEN, [487,377], [557, 408], 5)
+
 
     # viewport.center=player.rect.center
     # viewport.clamp_ip(level_rect)

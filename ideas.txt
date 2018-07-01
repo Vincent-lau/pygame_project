@@ -11,3 +11,7 @@ attributes
 move
 attack
 
+
+level 1 trick
+player has to reach
+
