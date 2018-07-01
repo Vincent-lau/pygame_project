@@ -16,6 +16,7 @@ import random
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
+DARKGREY=(169,169,169)
 RED = (255, 0, 0)
 BLUE=(0,0,255)
 
@@ -129,16 +130,19 @@ all_sprites_list=pg.sprite.Group()
 grounds=pg.sprite.Group()
 
 player = Player(RED, (30, 30))
-all_sprites_list.add(player)
-update=True     # update indicates whether it is the first time to enter a level
+
+
 
 
 
 def level_control(level,player,grounds,update):
     if(level==1):
         if(update):
+            grounds.empty()
+            all_sprites_list.empty()
             player.oriPos=(0,450-player.get_size()[1])
             player.set_pos(player.oriPos)
+            all_sprites_list.add(player)
             grounds.add(Block(BLACK, (100, 50), (0, 450)), Block(BLACK, (50, 50), (650, 450)))
             all_sprites_list.add(Block(BLACK, (100, 50), (0, 450)), Block(BLACK, (50, 50), (650, 450)))
 
@@ -156,9 +160,39 @@ def level_control(level,player,grounds,update):
             all_sprites_list.add(b)
 
 
+    elif(level==2):
+        if(update):
+            grounds.empty()
+            all_sprites_list.empty()
+            b=Block(BLACK,(50,50),(0,450))
+            grounds.add(b)
+            all_sprites_list.add(b)
+            b=Block(BLUE,(40,10),(50,450))
+
+            all_sprites_list.add(b)
+            b=Block(BLACK,(110,50),(90,450))
+            grounds.add(b)
+            all_sprites_list.add(b)
+            b=Block(DARKGREY,(60,50),(200,450))
+            grounds.add(b)
+            all_sprites_list.add(b)
+            b=Block(BLACK,(140,50),(260,450))
+            grounds.add(b)
+            all_sprites_list.add(b)
+            b=Block(BLACK,(30,50),(400,450))
+            grounds.add(b)
+            all_sprites_list.add(b)
+            b=Block(BLACK,(270,50),(430,450))
+            grounds.add(b)
+            all_sprites_list.add(b)
+            player.set_pos(player.oriPos)
+            all_sprites_list.add(player)
+
 font = pg.font.SysFont('Calibri', 25, True, False)
 # Used to manage how fast the screen updates
 clock = pg.time.Clock()
+update=True     # update indicates whether it is the first time to enter a level
+level=1
 
 
 
@@ -180,7 +214,12 @@ while not done:
 
 
     print(player.state,player.get_position())
-    level_control(1,player,grounds,update)
+
+    if(player.get_position()[0]>screenSize[0]):
+        level+=1
+        update=True
+    level_control(level,player,grounds,update)
+
     update=False
     all_sprites_list.update()
     all_sprites_list.draw(screen)
