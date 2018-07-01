@@ -125,13 +125,13 @@ all_sprites_list.add(Block(BLACK,(100,50),(0,450)),Block(BLACK,(50,50),(650,450)
 def level_control(player,grounds):
     player.pos=player.get_position()
     if(player.pos.x>100 and player.pos.x+player.get_size()[0]<650):
-        if(not pg.sprite.spritecollideany(player,grounds)):
+        if(len(grounds.sprites())==2):
             player.enter_fall()
-    #
-    # if(130<player.pos.x<150 and 440<player.pos.y<450):
-    #     b=Block(GREEN,(550,10),(100,450))
-    #     grounds.add(b)
-    #     all_sprites_list(b)
+
+    if(130<player.pos.x<150 and 400<player.pos.y<450):
+        b=Block(GREEN,(550,10),(100,450))
+        grounds.add(b)
+        all_sprites_list.add(b)
 
 
 font = pg.font.SysFont('Calibri', 25, True, False)
@@ -157,7 +157,7 @@ while not done:
     screen.fill(WHITE)
 
 
-    print(player.state)
+    print(player.state,player.get_position())
     level_control(player,grounds)
     all_sprites_list.update()
     all_sprites_list.draw(screen)
