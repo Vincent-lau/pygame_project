@@ -27,12 +27,27 @@ pg.init()
 
 
 class Block(pg.sprite.Sprite):
-    def __init__(self,color,size,position):
+    def __init__(self,color,size,pos):
         super().__init__()
         self.image=pg.Surface(size)
         self.image.fill(color)
-        self.rect=self.image.get_rect(topleft=position)
+        self.rect=self.image.get_rect(topleft=pos)
 
+
+
+
+class MovingBlock(Block):
+    def __init__(self,color,size,pos):
+        super().__init__(color,size,pos)
+        self.x_vel=0
+        self.y_vel=0
+
+    def enter_fall(self,x_vel,y_vel):
+        self.x_vel=x_vel
+        self.y_vel=y_vel
+
+    def update(self):
+        self.rect.move_ip(self.x_vel, self.y_vel)
 
 
 
@@ -45,7 +60,7 @@ class Player(pg.sprite.Sprite):
         self.oriPos=(0,0)
         self.rect=self.image.get_rect(topleft=pos)
         self.size=self.image.get_size()
-        self.lives=3
+        self.lives=10
         self.jumpPower=9
 
         self.grav = 0.4
@@ -128,7 +143,7 @@ class Player(pg.sprite.Sprite):
 
 all_sprites_list=pg.sprite.Group()
 grounds=pg.sprite.Group()
-
+traps=pg.sprite.Group()
 player = Player(RED, (30, 30))
 
 
@@ -136,6 +151,7 @@ player = Player(RED, (30, 30))
 
 
 def level_control(level,player,grounds,update):
+    player.pos = player.get_position()
     if(level==1):
         if(update):
             grounds.empty()
@@ -147,52 +163,73 @@ def level_control(level,player,grounds,update):
             all_sprites_list.add(Block(BLACK, (100, 50), (0, 450)), Block(BLACK, (50, 50), (650, 450)))
 
 
-        player.pos=player.get_position()
+
         if(player.pos.x>100 and player.pos.x+player.get_size()[0]<650):
             if(len(grounds.sprites())==2):
                 player.enter_fall()
-                if(player.rect.y>=screenSize[1]):
-                    player.hurt()
+
 
         if(130<player.pos.x<150 and 400<player.pos.y<450):
             b=Block(GREEN,(550,10),(100,450))
             grounds.add(b)
             all_sprites_list.add(b)
 
+        if (player.pos.y >= screenSize[1]):
+            player.hurt()
 
     elif(level==2):
+
         if(update):
             grounds.empty()
             all_sprites_list.empty()
+            traps.empty()
             b=Block(BLACK,(50,50),(0,450))
             grounds.add(b)
             all_sprites_list.add(b)
-            b=Block(BLUE,(40,10),(50,450))
+            b=Block(BLUE,(100,10),(50,450))
 
             all_sprites_list.add(b)
-            b=Block(BLACK,(110,50),(90,450))
+            b=Block(BLACK,(100,50),(150,450))
             grounds.add(b)
             all_sprites_list.add(b)
-            b=Block(DARKGREY,(60,50),(200,450))
+            b=MovingBlock(DARKGREY,(100,50),(250,450))
+            traps.add(b)
+            all_sprites_list.add(b)
+            b=Block(BLACK,(150,50),(350,450))
             grounds.add(b)
             all_sprites_list.add(b)
-            b=Block(BLACK,(140,50),(260,450))
+            b=MovingBlock(BLACK,(150,50),(500,450))
+            traps.add(b)
+            all_sprites_list.add(b)
+            b=Block(BLACK,(50,50),(650,450))
             grounds.add(b)
             all_sprites_list.add(b)
-            b=Block(BLACK,(30,50),(400,450))
-            grounds.add(b)
-            all_sprites_list.add(b)
-            b=Block(BLACK,(270,50),(430,450))
-            grounds.add(b)
-            all_sprites_list.add(b)
+            player.oriPos=(0,420)
             player.set_pos(player.oriPos)
             all_sprites_list.add(player)
+
+        if(50<player.pos.x<90 and player.pos.y+30>=450):
+            player.enter_fall()
+
+
+        if(250<player.pos.x<350-30):
+            player.enter_fall()
+            traps.sprites()[0].enter_fall(0,10)
+
+        elif(500<player.pos.x<650-30):
+            player.enter_fall()
+            traps.sprites()[1].enter_fall(0,10)
+
+        if (player.pos.y > screenSize[1]):
+            player.hurt()
+
+
 
 font = pg.font.SysFont('Calibri', 25, True, False)
 # Used to manage how fast the screen updates
 clock = pg.time.Clock()
 update=True     # update indicates whether it is the first time to enter a level
-level=1
+level=2
 
 
 
