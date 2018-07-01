@@ -36,14 +36,15 @@ class Block(pg.sprite.Sprite):
 
 
 class Player(pg.sprite.Sprite):
-    def __init__(self,color,size):
+
+    def __init__(self,color,size,pos=(0,0)):
         super().__init__()
         self.image=pg.Surface(size)
         self.image.fill(color)
-        self.rect=self.image.get_rect()
+        self.oriPos=(0,0)
+        self.rect=self.image.get_rect(topleft=pos)
         self.size=self.image.get_size()
-        self.rect.x=0
-        self.rect.y=450-size[1]
+        self.lives=3
         self.jumpPower=9
 
         self.grav = 0.4
@@ -54,9 +55,22 @@ class Player(pg.sprite.Sprite):
 
     def get_position(self):
         return self.rect
-
+    def set_pos(self,pos):
+        self.rect.x=pos[0]
+        self.rect.y=pos[1]
     def get_size(self):
         return self.size
+    def get_lives(self):
+        return player.lives
+
+    def hurt(self):
+        self.lives-=1
+        if(self.lives<=0):
+           pass
+        else:
+            self.set_pos(self.oriPos)
+
+
 
     def enter_jump(self):
         if(self.state==0):
@@ -112,26 +126,34 @@ class Player(pg.sprite.Sprite):
 
 
 all_sprites_list=pg.sprite.Group()
-
-player=Player(RED,(30,30))
 grounds=pg.sprite.Group()
-grounds.add(Block(BLACK,(100,50),(0,450)),Block(BLACK,(50,50),(650,450)))
 
+player = Player(RED, (30, 30))
 all_sprites_list.add(player)
-all_sprites_list.add(Block(BLACK,(100,50),(0,450)),Block(BLACK,(50,50),(650,450)))
+update=True     # update indicates whether it is the first time to enter a level
 
 
 
-def level_control(player,grounds):
-    player.pos=player.get_position()
-    if(player.pos.x>100 and player.pos.x+player.get_size()[0]<650):
-        if(len(grounds.sprites())==2):
-            player.enter_fall()
+def level_control(level,player,grounds,update):
+    if(level==1):
+        if(update):
+            player.oriPos=(0,450-player.get_size()[1])
+            player.set_pos(player.oriPos)
+            grounds.add(Block(BLACK, (100, 50), (0, 450)), Block(BLACK, (50, 50), (650, 450)))
+            all_sprites_list.add(Block(BLACK, (100, 50), (0, 450)), Block(BLACK, (50, 50), (650, 450)))
 
-    if(130<player.pos.x<150 and 400<player.pos.y<450):
-        b=Block(GREEN,(550,10),(100,450))
-        grounds.add(b)
-        all_sprites_list.add(b)
+
+        player.pos=player.get_position()
+        if(player.pos.x>100 and player.pos.x+player.get_size()[0]<650):
+            if(len(grounds.sprites())==2):
+                player.enter_fall()
+                if(player.rect.y>=screenSize[1]):
+                    player.hurt()
+
+        if(130<player.pos.x<150 and 400<player.pos.y<450):
+            b=Block(GREEN,(550,10),(100,450))
+            grounds.add(b)
+            all_sprites_list.add(b)
 
 
 font = pg.font.SysFont('Calibri', 25, True, False)
@@ -158,10 +180,12 @@ while not done:
 
 
     print(player.state,player.get_position())
-    level_control(player,grounds)
+    level_control(1,player,grounds,update)
+    update=False
     all_sprites_list.update()
     all_sprites_list.draw(screen)
-
+    text_live=font.render("remaining lives: "+str(player.get_lives()),True,BLACK)
+    screen.blit(text_live,(20,20))
 
 
     # viewport.center=player.rect.center
