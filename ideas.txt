@@ -15,3 +15,19 @@ attack
 level 1 trick
 player has to reach
 
+
+
+combination of platform and puzzles
+main character
+fun
+apple trees
+physics
+enemies  intelligence
+
+
+puzzles
+initial idea
+minimum spanning tree
+shortest path
+bebras challenge
+

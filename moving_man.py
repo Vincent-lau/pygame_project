@@ -229,7 +229,7 @@ font = pg.font.SysFont('Calibri', 25, True, False)
 # Used to manage how fast the screen updates
 clock = pg.time.Clock()
 update=True     # update indicates whether it is the first time to enter a level
-level=2
+level=1
 
 
 
