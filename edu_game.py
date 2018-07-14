@@ -19,7 +19,7 @@ maze=[[0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   [0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -35,7 +35,7 @@ all_sprites_group=pg.sprite.Group()
 # font = pg.font.SysFont('Calibri', 25, True, False)
 # Used to manage how fast the screen updates
 clock = pg.time.Clock()
-screenSize = (700, 600)
+screenSize = (700, 500)
 screen = pg.display.set_mode(screenSize)
 pg.init()
 done = False

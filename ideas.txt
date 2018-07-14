@@ -12,9 +12,6 @@ move
 attack
 
 
-level 1 trick
-player has to reach
-
 
 
 combination of platform and puzzles
@@ -31,3 +28,9 @@ minimum spanning tree
 shortest path
 bebras challenge
 
+
+
+
+saving the princess
+add grid lines
+consider general forms of drawing lines and walls
