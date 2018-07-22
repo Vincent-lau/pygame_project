@@ -46,9 +46,8 @@ class Player(pg.sprite.Sprite):
         elif dirY<0:
             newR=self.cor[0] - 1
 
+        flag = (0<=newR<10) and (0<=newC<10) and (maze[newR][newC]!=1)
 
-        flag = (maze[newR][newC]==0)
-        print(flag)
 
         if flag:
             if dirX:
@@ -57,7 +56,6 @@ class Player(pg.sprite.Sprite):
             if dirY:
                 self.rect.move_ip(0 , dirY)
                 self.cor[0]=newR
-        print(self.cor)
 
 
 class Tile(pg.sprite.Sprite):
@@ -74,9 +72,9 @@ maze=[[0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
    [0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   [0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],]
+   [0, 0, 0, 0, 0, 0, 0, 0, 2, 0],]
 
 tile_group=pg.sprite.Group()
 wall_group=pg.sprite.Group()
@@ -104,13 +102,20 @@ for i in range(10):
             wall_group.add(wall)
             all_sprites_group.add(wall)
 
-        if(maze[i][j]):
+        if(maze[i][j]==1):
 
 
             size=(500/10,500/10)
             tile=Tile((j*50,i*50),size,BLACK)
             tile_group.add(tile)
             all_sprites_group.add(tile)
+
+        elif maze[i][j]==2:
+            size = (20,20)
+            princess = Tile((j * 50+15, i * 50+15), size, RED)
+
+            all_sprites_group.add(princess)
+
 
 myPlayer=Player([15,15],[20,20],BLUE)
 all_sprites_group.add(myPlayer)
