@@ -1,4 +1,5 @@
 import pygame as pg
+import random
 
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -26,6 +27,7 @@ class Player(pg.sprite.Sprite):
             self.move([self.rect.x,self.rect.y-50])
         elif keys==pg.K_DOWN:
             self.move([self.rect.x,self.rect.y+50])
+
 
     def move(self,endPos):
         endX=endPos[0]
@@ -58,29 +60,85 @@ class Player(pg.sprite.Sprite):
                 self.cor[0]=newR
 
 
-class Tile(pg.sprite.Sprite):
+class Tile(pg.sprite.Sprite): # grid lines
     def __init__(self,pos,size,color):
         super().__init__()
         self.image=pg.Surface(size)
         self.rect=self.image.get_rect(topleft=pos)
         self.image.fill(color)
 
-maze=[[0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-   [0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-   [0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
-   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-   [0, 0, 0, 0, 0, 0, 0, 0, 2, 0],]
+def generate_maze(): # in addition to generate the maze and add it to groups, also returns the myPlayer object
+    # 1=wall 2=player 3=princess
+    nMazeNum=random.randrange(5,20)
+    maze=[[0]*nMazeNum for i in range(nMazeNum)]
+
+
+    nSpecialElement=random.randrange(0,int(nMazeNum*nMazeNum*0.6))  # randrange [a,b)
+    playerCor=random.randrange(0,nMazeNum*nMazeNum)
+
+    maze[playerCor//nMazeNum][playerCor%nMazeNum]=2
+
+    while True:
+        princessCor=random.randrange(0,nMazeNum*nMazeNum)
+        if princessCor != playerCor:
+            break
+    maze[princessCor // nMazeNum][princessCor % nMazeNum] = 3
+    nSpecialElement-=2
+    print("nSpecialElemen=",nSpecialElement,"nMazeNum=",nMazeNum)
+    for i in range(nSpecialElement):
+
+        while True:
+            wallCor = random.randrange(0,nMazeNum * nMazeNum )
+            if wallCor!=princessCor and wallCor != playerCor:
+                break
+
+        maze[wallCor // nMazeNum][wallCor % nMazeNum] = 1
+    
+    print(maze)
+    for i in range(nMazeNum+1): # +1 in oder to add grid lines of both ends
+        sideLength=500/nMazeNum
+        wall = Tile((0, i * sideLength), (500, 3), BLACK) # adding grid lines
+        wall_group.add(wall)
+        all_sprites_group.add(wall)
+
+
+
+        for j in range(nMazeNum+1):
+            if (i == 0):
+                wall = Tile((j * sideLength, 0), (3, 500), BLACK)
+                wall_group.add(wall)
+                all_sprites_group.add(wall)
+
+            if i == nMazeNum or j == nMazeNum:  # if it is the fringe of the maze, then go on
+                continue
+
+            if (maze[i][j] == 1):
+
+                tile = Tile([j * sideLength, i * sideLength], [sideLength+0.8,sideLength+0.8], BLACK)
+                # adding 0.8 is not a very good way but makes the maze look better
+                tile_group.add(tile)
+                all_sprites_group.add(tile)
+
+            elif maze[i][j]==2:
+                size = [sideLength * 0.4, sideLength * 0.4] # the size of the player will make up two fifths of a tile
+                myPlayer = Player((j * sideLength + sideLength * 0.3, i * sideLength + sideLength * 0.3), size, BLUE) # player is centred
+
+
+            elif maze[i][j] == 3:
+                size = [sideLength*0.4,sideLength*0.4]
+                princess = Tile((j * sideLength + sideLength*0.3, i * sideLength + sideLength*0.3), size, RED)
+                all_sprites_group.add(princess)
+
+    return myPlayer
+
+
 
 tile_group=pg.sprite.Group()
 wall_group=pg.sprite.Group()
 all_sprites_group=pg.sprite.Group()
 
-
+myPlayer=generate_maze()
+all_sprites_group.add(myPlayer)
 
 # font = pg.font.SysFont('Calibri', 25, True, False)
 # Used to manage how fast the screen updates
@@ -90,35 +148,7 @@ screen = pg.display.set_mode(screenSize)
 pg.init()
 done = False
 
-for i in range(10):
-    wall=Tile((0,i*50),(500,3),BLACK)
-    wall_group.add(wall)
-    all_sprites_group.add(wall)
-    all_sprites_group.add(Tile((500,0),(3,500),BLACK))
-    all_sprites_group.add(Tile((0, 500), (500, 3), BLACK))
-    for j in range(10):
-        if(i==0):
-            wall = Tile((j*50,0), (3,500), BLACK)
-            wall_group.add(wall)
-            all_sprites_group.add(wall)
 
-        if(maze[i][j]==1):
-
-
-            size=(500/10,500/10)
-            tile=Tile((j*50,i*50),size,BLACK)
-            tile_group.add(tile)
-            all_sprites_group.add(tile)
-
-        elif maze[i][j]==2:
-            size = (20,20)
-            princess = Tile((j * 50+15, i * 50+15), size, RED)
-
-            all_sprites_group.add(princess)
-
-
-myPlayer=Player([15,15],[20,20],BLUE)
-all_sprites_group.add(myPlayer)
 
 while not done:
     for event in pg.event.get():
