@@ -9,24 +9,25 @@ RED = (255, 0, 0)
 BLUE=(0,0,255)
 
 class Player(pg.sprite.Sprite):
-    def __init__(self,pos,size,color):
+    def __init__(self,pos,cor,size,color):
         super().__init__()
         self.image=pg.Surface(size)
         self.rect=self.image.get_rect(topleft=pos)
         self.image.fill(color)
         self.time=0
-        self.cor=[0,0]      # cor[0] is the row number and cor[1] is the column number
+        self.cor=cor    # cor[0] is the row number and cor[1] is the column number
 
 
     def tracking_key(self,keys):
+        dis=500/nMazeNum
         if keys==pg.K_RIGHT:
-            self.move([self.rect.x+50,self.rect.y])
+            self.move([self.rect.x+dis,self.rect.y])
         elif keys==pg.K_LEFT:
-            self.move([self.rect.x-50,self.rect.y])
+            self.move([self.rect.x-dis,self.rect.y])
         elif keys==pg.K_UP:
-            self.move([self.rect.x,self.rect.y-50])
+            self.move([self.rect.x,self.rect.y-dis])
         elif keys==pg.K_DOWN:
-            self.move([self.rect.x,self.rect.y+50])
+            self.move([self.rect.x,self.rect.y+dis])
 
 
     def move(self,endPos):
@@ -48,8 +49,8 @@ class Player(pg.sprite.Sprite):
         elif dirY<0:
             newR=self.cor[0] - 1
 
-        flag = (0<=newR<10) and (0<=newC<10) and (maze[newR][newC]!=1)
-
+        flag = (0<=newR<nMazeNum) and (0<=newC<nMazeNum) and (maze[newR][newC]!=1)
+        print(flag,newR,newC)
 
         if flag:
             if dirX:
@@ -69,6 +70,7 @@ class Tile(pg.sprite.Sprite): # grid lines
 
 def generate_maze(): # in addition to generate the maze and add it to groups, also returns the myPlayer object
     # 1=wall 2=player 3=princess
+    global maze
     nMazeNum=random.randrange(5,20)
     maze=[[0]*nMazeNum for i in range(nMazeNum)]
 
@@ -121,7 +123,7 @@ def generate_maze(): # in addition to generate the maze and add it to groups, al
 
             elif maze[i][j]==2:
                 size = [sideLength * 0.4, sideLength * 0.4] # the size of the player will make up two fifths of a tile
-                myPlayer = Player((j * sideLength + sideLength * 0.3, i * sideLength + sideLength * 0.3), size, BLUE) # player is centred
+                myPlayer = Player((j * sideLength + sideLength * 0.3, i * sideLength + sideLength * 0.3),[i,j], size, BLUE) # player is centred
 
 
             elif maze[i][j] == 3:
@@ -129,7 +131,7 @@ def generate_maze(): # in addition to generate the maze and add it to groups, al
                 princess = Tile((j * sideLength + sideLength*0.3, i * sideLength + sideLength*0.3), size, RED)
                 all_sprites_group.add(princess)
 
-    return myPlayer
+    return myPlayer,nMazeNum
 
 
 
@@ -137,7 +139,8 @@ tile_group=pg.sprite.Group()
 wall_group=pg.sprite.Group()
 all_sprites_group=pg.sprite.Group()
 
-myPlayer=generate_maze()
+maze=[]
+myPlayer,nMazeNum=generate_maze()
 all_sprites_group.add(myPlayer)
 
 # font = pg.font.SysFont('Calibri', 25, True, False)
