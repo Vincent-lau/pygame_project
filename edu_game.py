@@ -1,5 +1,7 @@
 import pygame as pg
 import random
+from collections import deque
+
 
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -50,7 +52,6 @@ class Player(pg.sprite.Sprite):
             newR=self.cor[0] - 1
 
         flag = (0<=newR<nMazeNum) and (0<=newC<nMazeNum) and (maze[newR][newC]!=1)
-        print(flag,newR,newC)
 
         if flag:
             if dirX:
@@ -59,6 +60,9 @@ class Player(pg.sprite.Sprite):
             if dirY:
                 self.rect.move_ip(0 , dirY)
                 self.cor[0]=newR
+
+    def get_cor(self):
+        return self.cor
 
 
 class Tile(pg.sprite.Sprite): # grid lines
@@ -73,7 +77,7 @@ def generate_maze(): # in addition to generate the maze and add it to groups, al
     global maze
     nMazeNum=random.randrange(5,20)
     maze=[[0]*nMazeNum for i in range(nMazeNum)]
-
+    princessPos=[0,0]
 
     nSpecialElement=random.randrange(0,int(nMazeNum*nMazeNum*0.6))  # randrange [a,b)
     playerCor=random.randrange(0,nMazeNum*nMazeNum)
@@ -125,13 +129,34 @@ def generate_maze(): # in addition to generate the maze and add it to groups, al
                 size = [sideLength * 0.4, sideLength * 0.4] # the size of the player will make up two fifths of a tile
                 myPlayer = Player((j * sideLength + sideLength * 0.3, i * sideLength + sideLength * 0.3),[i,j], size, BLUE) # player is centred
 
-
             elif maze[i][j] == 3:
                 size = [sideLength*0.4,sideLength*0.4]
                 princess = Tile((j * sideLength + sideLength*0.3, i * sideLength + sideLength*0.3), size, RED)
                 all_sprites_group.add(princess)
+                princessPos = [i, j]
 
-    return myPlayer,nMazeNum
+    return myPlayer,nMazeNum,princessPos
+
+
+def Bfs(startPpos, endPos):
+    global maze, nMazeNum
+    q=deque() # every element in q is a list of three integers s[0]: row num, s[1]:column number, s[2]: number of steps
+    visited=[[0]*nMazeNum for i in range(nMazeNum)]
+    dir=[[0,1,0,-1],[1,0,-1,0]]
+    q.append([startPpos[0],startPpos[1],0])
+    while q:
+        s=q.popleft()
+        print("element in queue",s)
+        if [s[0],s[1]]==endPos:
+            return s[2]
+        for i in range(4):
+            newR=s[0]+dir[0][i]
+            newC=s[1]+dir[1][i]
+            if newR<0 or newR>=nMazeNum or newC<0 or newC>=nMazeNum or maze[newR][newC]==1 or visited[newR][newC]:
+                continue
+            q.append([newR,newC,s[2]+1])
+            visited[newR][newC]=1
+    return -1
 
 
 
@@ -140,7 +165,10 @@ wall_group=pg.sprite.Group()
 all_sprites_group=pg.sprite.Group()
 
 maze=[]
-myPlayer,nMazeNum=generate_maze()
+myPlayer,nMazeNum,endPos=generate_maze()
+
+tmp=Bfs(myPlayer.get_cor(),endPos)
+print("steps required:",tmp)
 all_sprites_group.add(myPlayer)
 
 # font = pg.font.SysFont('Calibri', 25, True, False)
