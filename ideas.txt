@@ -33,4 +33,20 @@ bebras challenge
 
 saving the princess
 add grid lines
+movement of the knight
+knight blocked by the wall and boundary
+add princess
+general form of the maze
+Bfs in Python and implementation details
+
+give task and instructions to the user button and display information
+display solutions
+define level as a class and different levels derive from the general level
+level of increasing difficulty
+
+
+
 consider general forms of drawing lines and walls
+Bfs
+add more elements, e.g. enemies
+
