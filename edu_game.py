@@ -158,7 +158,18 @@ def Bfs(startPpos, endPos):
             visited[newR][newC]=1
     return -1
 
+def display_information():
+    font = pg.font.SysFont('Calibri', 25, True, False)
+    gameInstruction = []
+    gameInstruction.append(font.render("Game Instruction:", True, RED))
+    gameInstruction.append(font.render("Move the player to", True, BLACK))
+    gameInstruction.append(font.render("meet the princess", True, BLACK))
+    gameInstruction.append(font.render("in minimum number", True, BLACK))
+    gameInstruction.append(font.render("of moves", True, BLACK))
+    for i in range(len(gameInstruction)):
+        screen.blit(gameInstruction[i],[500+10,i*30])
 
+    if 
 
 tile_group=pg.sprite.Group()
 wall_group=pg.sprite.Group()
@@ -171,8 +182,10 @@ tmp=Bfs(myPlayer.get_cor(),endPos)
 print("steps required:",tmp)
 all_sprites_group.add(myPlayer)
 
-# font = pg.font.SysFont('Calibri', 25, True, False)
-# Used to manage how fast the screen updates
+
+
+
+
 clock = pg.time.Clock()
 screenSize = (700, 500)
 screen = pg.display.set_mode(screenSize)
@@ -188,10 +201,13 @@ while not done:
         elif event.type == pg.KEYDOWN:
             myPlayer.tracking_key(event.key)
 
-    # print(myPlayer.cor,maze[myPlayer.cor[0]][myPlayer.cor[1]])
+
+
+
 
     screen.fill(WHITE)
     all_sprites_group.draw(screen)
+    display_information()   # this line must be after the group draw code
 
 
     pg.display.flip()
