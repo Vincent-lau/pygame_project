@@ -57,13 +57,16 @@ class Player(pg.sprite.Sprite):
             if dirX:
                 self.rect.move_ip(dirX , 0)
                 self.cor[1]=newC
+                self.time+=1
             if dirY:
                 self.rect.move_ip(0 , dirY)
                 self.cor[0]=newR
+                self.time+=1
 
     def get_cor(self):
         return self.cor
-
+    def get_time(self):
+        return self.time
 
 class Tile(pg.sprite.Sprite): # grid lines
     def __init__(self,pos,size,color):
@@ -72,6 +75,7 @@ class Tile(pg.sprite.Sprite): # grid lines
         self.rect=self.image.get_rect(topleft=pos)
         self.image.fill(color)
 
+
 def generate_maze(): # in addition to generate the maze and add it to groups, also returns the myPlayer object
     # 1=wall 2=player 3=princess
     global maze
@@ -79,7 +83,7 @@ def generate_maze(): # in addition to generate the maze and add it to groups, al
     maze=[[0]*nMazeNum for i in range(nMazeNum)]
     princessPos=[0,0]
 
-    nSpecialElement=random.randrange(0,int(nMazeNum*nMazeNum*0.6))  # randrange [a,b)
+    nSpecialElement=random.randrange(0,int(nMazeNum*nMazeNum*0.5))  # randrange [a,b), 60% of the maze is wall
     playerCor=random.randrange(0,nMazeNum*nMazeNum)
 
     maze[playerCor//nMazeNum][playerCor%nMazeNum]=2
@@ -160,6 +164,7 @@ def Bfs(startPpos, endPos):
 
 def display_information():
     font = pg.font.SysFont('Calibri', 25, True, False)
+    #game instruction
     gameInstruction = []
     gameInstruction.append(font.render("Game Instruction:", True, RED))
     gameInstruction.append(font.render("Move the player to", True, BLACK))
@@ -169,7 +174,21 @@ def display_information():
     for i in range(len(gameInstruction)):
         screen.blit(gameInstruction[i],[500+10,i*30])
 
-    if 
+    #game information
+    if myPlayer.get_cor()==endPos and myPlayer.get_time()==solution:
+        screen.blit(font.render("You Win!", True, RED), [500 + 10, 200 + 10])
+        screen.blit(font.render("Congrtulations",True,RED),[500+10,200+10+30])
+    elif myPlayer.get_cor()==endPos:
+        screen.blit(font.render("Well done!", True, RED), [500 + 10, 200 + 10])
+        screen.blit(font.render("Try to do it with", True, RED), [500 + 10, 200 + 10 + 30])
+        screen.blit(font.render("fewer moves", True, RED), [500 + 10, 200 + 10 + 30*2])
+
+
+    screen.blit(font.render("steps taken: "+str(myPlayer.get_time()),True,BLACK),[500+10,300+10])
+    screen.blit(font.render("steps required: " + str(solution), True, BLACK), [500 + 10, 300 + 10+30])
+
+
+
 
 tile_group=pg.sprite.Group()
 wall_group=pg.sprite.Group()
@@ -178,18 +197,15 @@ all_sprites_group=pg.sprite.Group()
 maze=[]
 myPlayer,nMazeNum,endPos=generate_maze()
 
-tmp=Bfs(myPlayer.get_cor(),endPos)
-print("steps required:",tmp)
+solution=Bfs(myPlayer.get_cor(),endPos)
+print("steps required:",solution)
 all_sprites_group.add(myPlayer)
 
-
-
-
-
+pg.init()
 clock = pg.time.Clock()
 screenSize = (700, 500)
 screen = pg.display.set_mode(screenSize)
-pg.init()
+
 done = False
 
 
