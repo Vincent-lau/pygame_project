@@ -1,5 +1,6 @@
 import pygame as pg
 import random
+import copy
 from collections import deque
 
 
@@ -25,8 +26,10 @@ class Player(pg.sprite.Sprite):
     def __init__(self,pos,cor,size,color):
         super().__init__()
         self.image=pg.Surface(size)
+        self.oriPos=pos
         self.rect=self.image.get_rect(topleft=pos)
         self.image.fill(color)
+        self.oriCor=copy.deepcopy(cor) # any oriCor must use deepcopy
         self.cor=cor    # cor[0] is the row number and cor[1] is the column number
 
     def tracking_key(self,keys):
@@ -38,6 +41,8 @@ class Player(pg.sprite.Sprite):
     def get_cor(self):
         return self.cor
 
+    def reset(self):
+        pass
 
 class Tile(pg.sprite.Sprite): # grid lines
     def __init__(self,pos,size,color):
@@ -60,13 +65,13 @@ class Button(object):
         return self.rect.x<mousePos[0]<self.rect.x+self.size[0] and self.rect.y<mousePos[1]<self.rect.y+self.size[1]
 
     def isPressed(self):
-        return pg.mouse.get_pressed()[0]
+        return self.isOver() and pg.mouse.get_pressed()[0] # mouse needs to be over a certain button
 
-    def display(self):
+    def display(self):  # display word and the button on the screen
         screen.blit(self.image,self.rect)
         screen.blit(font.render(self.word,True,WHITE),[self.rect.x+5,self.rect.y+10])
 
-    def switch(self,color):
+    def switch(self,color): # switch the color of the button
         self.image.fill(color)
 
     def update(self):
@@ -80,8 +85,8 @@ class Button(object):
 class Level(object):
     def __init__(self): 
         self.solution=-1
-        self.button_retry=Button([500+10,400+10],[70,40],GREY,"retry")
-        self.button_restart=Button([600+10,400+10],[70,40],GREY,"restart")
+        self.retryButton=Button([500+10,400+10],[70,40],GREY,"retry")
+        self.restartButton=Button([600+10,400+10],[70,40],GREY,"restart")
 
     def initialise(self):
         pass
@@ -114,7 +119,7 @@ class Level1(Level):
     def initialise(self):
         # 1=wall 2=player 3=princess
 
-        Level1.nMazeNum = random.randrange(5, 20)
+        Level1.nMazeNum = random.randrange(5, 30)
         Level1.maze = [[0] * Level1.nMazeNum for i in range(Level1.nMazeNum)]
         
         nSpecialElement = random.randrange(0,
@@ -176,6 +181,7 @@ class Level1(Level):
                     Level1.princessPos = [i, j]
 
     def get_solution(self):
+        self.solution=-1
         q = deque()
         # every element in q is a list of three integers s[0]: row num, s[1]:column number, s[2]: number of steps
         visited = [[0] * Level1.nMazeNum for i in range(Level1.nMazeNum)]
@@ -222,17 +228,36 @@ class Level1(Level):
         screen.blit(font.render("steps taken: "+str(self.myPlayer.get_time()),True,BLACK),[500+10,300+10])
         screen.blit(font.render("steps required: " + str(self.solution), True, BLACK), [500 + 10, 300 + 10+30])
 
+    def retry(self):
+        if self.retryButton.isPressed():
+            self.myPlayer.reset()
+
+    def restart(self):
+        if self.restartButton.isPressed():
+            all_sprites_group.empty()
+            wall_group.empty()
+            tile_group.empty()
+
+            self.pre_update()
+
+    def pre_update(self):
+        self.initialise()
+        self.get_solution()
+
     def update(self):
-        self.button_retry.update()
-        self.button_restart.update()
+        self.retryButton.update()
+        self.retry()
+        self.restart()
+        self.restartButton.update()
         self.display_information()
+
 
 
 class Player1(Player):  # class Player1 is a friend of class Level1
 
     def __init__(self, pos, cor, size, color):
         Player.__init__(self,pos, cor, size, color)
-        self.time=0
+        self.oriTime=self.time=0
 
     def tracking_key(self,keys):
         dis=500/Level1.nMazeNum
@@ -278,11 +303,17 @@ class Player1(Player):  # class Player1 is a friend of class Level1
     def get_time(self):
         return self.time
 
+    def reset(self):
+        self.cor=copy.deepcopy(self.oriCor) # any oriCor must be deeply copied
+        self.rect.x=self.oriPos[0]
+        self.rect.y=self.oriPos[1]
+        self.time=self.oriTime
+
+
 done = False
 
 l1=Level1()
-l1.initialise()
-l1.get_solution()
+l1.pre_update()
 
 while not done:
     for event in pg.event.get():
@@ -290,7 +321,6 @@ while not done:
             done=True
         elif event.type == pg.KEYDOWN:
             l1.myPlayer.tracking_key(event.key)
-
 
 
 
