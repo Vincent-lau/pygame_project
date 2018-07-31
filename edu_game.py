@@ -7,14 +7,15 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
 DARKGREY=(169,169,169)
+GREY=(96,96,96)
 RED = (255, 0, 0)
 BLUE=(0,0,255)
-
 
 tile_group=pg.sprite.Group()
 wall_group=pg.sprite.Group()
 all_sprites_group=pg.sprite.Group()
 pg.init()
+font = pg.font.SysFont('Calibri', 25, True, False)
 clock = pg.time.Clock()
 screenSize = (700, 500)
 screen = pg.display.set_mode(screenSize)
@@ -38,7 +39,7 @@ class Player(pg.sprite.Sprite):
         return self.cor
 
 
-class Tile(object): # grid lines
+class Tile(pg.sprite.Sprite): # grid lines
     def __init__(self,pos,size,color):
         super().__init__()
         self.image=pg.Surface(size)
@@ -46,11 +47,41 @@ class Tile(object): # grid lines
         self.image.fill(color)
 
 
-class Level(object):
-    font = pg.font.SysFont('Calibri', 25, True, False)
+class Button(object):
+    def __init__(self,pos,size,color,word):
+        self.image=pg.Surface(size)
+        self.rect=self.image.get_rect(topleft=pos)
+        self.image.fill(color)
+        self.word=word
+        self.size=size
 
+    def isOver(self):
+        mousePos=pg.mouse.get_pos()
+        return self.rect.x<mousePos[0]<self.rect.x+self.size[0] and self.rect.y<mousePos[1]<self.rect.y+self.size[1]
+
+    def isPressed(self):
+        return pg.mouse.get_pressed()[0]
+
+    def display(self):
+        screen.blit(self.image,self.rect)
+        screen.blit(font.render(self.word,True,WHITE),[self.rect.x+5,self.rect.y+10])
+
+    def switch(self,color):
+        self.image.fill(color)
+
+    def update(self):
+        if self.isOver():
+            self.switch(DARKGREY)
+        else:
+            self.switch(GREY)
+        self.display()
+
+
+class Level(object):
     def __init__(self): 
         self.solution=-1
+        self.button_retry=Button([500+10,400+10],[70,40],GREY,"retry")
+        self.button_restart=Button([600+10,400+10],[70,40],GREY,"restart")
 
     def initialise(self):
         pass
@@ -65,6 +96,9 @@ class Level(object):
         pass
 
     def retry(self):    # reset the game while keeping the map the same
+        pass
+
+    def update(self):
         pass
 
 
@@ -168,25 +202,30 @@ class Level1(Level):
     def display_information(self):
         # game instruction
         gameInstruction = []
-        gameInstruction.append(self.font.render("Game Instruction:", True, RED))
-        gameInstruction.append(self.font.render("Move the player to", True, BLACK))
-        gameInstruction.append(self.font.render("meet the princess", True, BLACK))
-        gameInstruction.append(self.font.render("in minimum number", True, BLACK))
-        gameInstruction.append(self.font.render("of moves", True, BLACK))
+        gameInstruction.append(font.render("Game Instruction:", True, RED))
+        gameInstruction.append(font.render("Move the player to", True, BLACK))
+        gameInstruction.append(font.render("meet the princess", True, BLACK))
+        gameInstruction.append(font.render("in minimum number", True, BLACK))
+        gameInstruction.append(font.render("of moves", True, BLACK))
         for i in range(len(gameInstruction)):
             screen.blit(gameInstruction[i],[500+10,i*30])
 
         # game information
         if self.myPlayer.get_cor()==Level1.princessPos and self.myPlayer.get_time()==self.solution:
-            screen.blit(self.font.render("You Win!", True, RED), [500 + 10, 200 + 10])
-            screen.blit(self.font.render("Congrtulations",True,RED),[500+10,200+10+30])
+            screen.blit(font.render("You Win!", True, RED), [500 + 10, 200 + 10])
+            screen.blit(font.render("Congrtulations",True,RED),[500+10,200+10+30])
         elif self.myPlayer.get_cor()==Level1.princessPos:
-            screen.blit(self.font.render("Well done!", True, RED), [500 + 10, 200 + 10])
-            screen.blit(self.font.render("Try to do it with", True, RED), [500 + 10, 200 + 10 + 30])
-            screen.blit(self.font.render("fewer moves", True, RED), [500 + 10, 200 + 10 + 30*2])
+            screen.blit(font.render("Well done!", True, RED), [500 + 10, 200 + 10])
+            screen.blit(font.render("Try to do it with", True, RED), [500 + 10, 200 + 10 + 30])
+            screen.blit(font.render("fewer moves", True, RED), [500 + 10, 200 + 10 + 30*2])
 
-        screen.blit(self.font.render("steps taken: "+str(self.myPlayer.get_time()),True,BLACK),[500+10,300+10])
-        screen.blit(self.font.render("steps required: " + str(self.solution), True, BLACK), [500 + 10, 300 + 10+30])
+        screen.blit(font.render("steps taken: "+str(self.myPlayer.get_time()),True,BLACK),[500+10,300+10])
+        screen.blit(font.render("steps required: " + str(self.solution), True, BLACK), [500 + 10, 300 + 10+30])
+
+    def update(self):
+        self.button_retry.update()
+        self.button_restart.update()
+        self.display_information()
 
 
 class Player1(Player):  # class Player1 is a friend of class Level1
@@ -258,7 +297,7 @@ while not done:
 
     screen.fill(WHITE)
     all_sprites_group.draw(screen)
-    l1.display_information()   # this line must be after the group draw code
+    l1.update()   # this line must be after the group draw code
 
 
     pg.display.flip()
