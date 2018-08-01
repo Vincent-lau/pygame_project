@@ -12,8 +12,6 @@ GREY=(96,96,96)
 RED = (255, 0, 0)
 BLUE=(0,0,255)
 
-tile_group=pg.sprite.Group()
-wall_group=pg.sprite.Group()
 all_sprites_group=pg.sprite.Group()
 pg.init()
 font = pg.font.SysFont('Calibri', 25, True, False)
@@ -22,7 +20,7 @@ screenSize = (700, 500)
 screen = pg.display.set_mode(screenSize)
 
 
-class Player(pg.sprite.Sprite):
+class Character(pg.sprite.Sprite):
     def __init__(self,pos,cor,size,color):
         super().__init__()
         self.image=pg.Surface(size)
@@ -31,6 +29,7 @@ class Player(pg.sprite.Sprite):
         self.image.fill(color)
         self.oriCor=copy.deepcopy(cor) # any oriCor must use deepcopy
         self.cor=cor    # cor[0] is the row number and cor[1] is the column number
+        self.size=size
 
     def tracking_key(self,keys):
         pass
@@ -44,12 +43,28 @@ class Player(pg.sprite.Sprite):
     def reset(self):
         pass
 
-class Tile(pg.sprite.Sprite): # grid lines
-    def __init__(self,pos,size,color):
+
+class Tile(pg.sprite.Sprite):
+    def __init__(self,pos,size):
         super().__init__()
         self.image=pg.Surface(size)
         self.rect=self.image.get_rect(topleft=pos)
-        self.image.fill(color)
+        self.color=1
+        self.centre=[pos[0]+size[0]/2,pos[1]+size[1]/2]
+
+    def set_color(self,color):
+        # this is just a representation, color=1 means that the tile does not need to be filled,
+        # color=0 means it should be filled
+        self.color=color
+
+    def get_color(self):
+        return self.color
+
+    def get_centre(self):
+        return self.centre
+
+    def get_rect(self):
+        return self.rect
 
 
 class Button(object):
@@ -111,17 +126,19 @@ class Level1(Level):
     maze=[]
     princessPos = [0, 0]
     nMazeNum = 0
-    
+    tile_list=[]
     def __init__(self):
         super().__init__()
         self.myPlayer=Player1([0,0],[0,0],[0,0],BLACK)
+
         
     def initialise(self):
         # 1=wall 2=player 3=princess
 
         Level1.nMazeNum = random.randrange(5, 30)
         Level1.maze = [[0] * Level1.nMazeNum for i in range(Level1.nMazeNum)]
-        
+        Level1.tile_list = [[0] * Level1.nMazeNum for i in range(Level1.nMazeNum)]
+
         nSpecialElement = random.randrange(0,
                                            int(Level1.nMazeNum * Level1.nMazeNum * 0.5))  # randrange [a,b), 60% of the Level1.maze is wall
         playerCor = random.randrange(0, Level1.nMazeNum * Level1.nMazeNum)
@@ -145,40 +162,30 @@ class Level1(Level):
             Level1.maze[wallCor // Level1.nMazeNum][wallCor % Level1.nMazeNum] = 1
 
         print(Level1.maze)
-        for i in range(Level1.nMazeNum + 1):  # +1 in oder to add grid lines of both ends
-            sideLength = 500 / Level1.nMazeNum
-            wall = Tile((0, i * sideLength), (500, 3), BLACK)  # adding grid lines
-            wall_group.add(wall)
-            all_sprites_group.add(wall)
+        sideLength = 500 / Level1.nMazeNum
+        for i in range(Level1.nMazeNum):
+            for j in range(Level1.nMazeNum):
 
-            for j in range(Level1.nMazeNum + 1):
-                if i == 0:
-                    wall = Tile((j * sideLength, 0), (3, 500), BLACK)
-                    wall_group.add(wall)
-                    all_sprites_group.add(wall)
-
-                if i == Level1.nMazeNum or j == Level1.nMazeNum:  # if it is the fringe of the Level1.maze, then go on
-                    continue
+                t = Tile((j * sideLength, i * sideLength), (sideLength, sideLength))
+                print(j * sideLength, i * sideLength)
 
                 if Level1.maze[i][j] == 1:
-
-                    tile = Tile([j * sideLength, i * sideLength], [sideLength + 0.8, sideLength + 0.8], BLACK)
-                    # adding 0.8 is not a very good way but makes the Level1.maze look better
-                    tile_group.add(tile)
-                    all_sprites_group.add(tile)
+                    t.set_color(0)
 
                 elif Level1.maze[i][j] == 2:
                     size = [sideLength * 0.4,
                             sideLength * 0.4]  # the size of the player will make up two fifths of a tile
-                    self.myPlayer = Player1((j * sideLength + sideLength * 0.3, i * sideLength + sideLength * 0.3), [i, j],
+                    self.myPlayer = Player1((t.get_centre()[0] - size[0] /2,  + t.get_centre()[1] - size[1]/2), [i, j],
                                       size, BLUE)  # player is centred
                     all_sprites_group.add(self.myPlayer)
 
                 elif Level1.maze[i][j] == 3:
                     size = [sideLength * 0.4, sideLength * 0.4]
-                    princess = Tile((j * sideLength + sideLength * 0.3, i * sideLength + sideLength * 0.3), size, RED)
+                    princess = Tile((t.get_centre()[0] - size[0] /2,  + t.get_centre()[1] - size[1]/2), size)
                     all_sprites_group.add(princess)
                     Level1.princessPos = [i, j]
+
+                Level1.tile_list[i][j]=t
 
     def get_solution(self):
         self.solution=-1
@@ -203,6 +210,11 @@ class Level1(Level):
                 q.append([newR, newC, s[2] + 1])
                 visited[newR][newC] = 1
 
+    def draw_tiles(self):
+        for i in range(Level1.nMazeNum):
+            for j in range(Level1.nMazeNum):
+                t=Level1.tile_list[i][j]
+                pg.draw.rect(screen,BLACK,t.get_rect(),t.get_color()*1)
 
 
     def display_information(self):
@@ -235,9 +247,7 @@ class Level1(Level):
     def restart(self):
         if self.restartButton.isPressed():
             all_sprites_group.empty()
-            wall_group.empty()
-            tile_group.empty()
-
+            self.tile_list=[]
             self.pre_update()
 
     def pre_update(self):
@@ -245,6 +255,7 @@ class Level1(Level):
         self.get_solution()
 
     def update(self):
+        self.draw_tiles()
         self.retryButton.update()
         self.retry()
         self.restart()
@@ -253,52 +264,38 @@ class Level1(Level):
 
 
 
-class Player1(Player):  # class Player1 is a friend of class Level1
+class Player1(Character):  # class Player1 is a friend of class Level1
 
     def __init__(self, pos, cor, size, color):
-        Player.__init__(self,pos, cor, size, color)
+        Character.__init__(self,pos, cor, size, color)
         self.oriTime=self.time=0
 
     def tracking_key(self,keys):
-        dis=500/Level1.nMazeNum
         if keys==pg.K_RIGHT:
-            self.move([self.rect.x+dis,self.rect.y])
+            self.move([self.cor[0],self.cor[1]+1])
         elif keys==pg.K_LEFT:
-            self.move([self.rect.x-dis,self.rect.y])
+            self.move([self.cor[0], self.cor[1] -1])
         elif keys==pg.K_UP:
-            self.move([self.rect.x,self.rect.y-dis])
+            self.move([self.cor[0]-1, self.cor[1]])
         elif keys==pg.K_DOWN:
-            self.move([self.rect.x,self.rect.y+dis])
+            self.move([self.cor[0]+1, self.cor[1]])
 
-    def move(self,endPos):
-        endX=endPos[0]
-        endY=endPos[1]
-        dirX = endX - self.rect.x
-        dirY = endY - self.rect.y
-        newR = self.cor[0]
-        newC = self.cor[1]
-
-        if dirX > 0:
-            newC=self.cor[1] + 1
-        elif dirX < 0:
-            newC=self.cor[1] - 1
-
-        if dirY > 0:
-            newR=self.cor[0] + 1
-        elif dirY<0:
-            newR=self.cor[0] - 1
-
+    def move(self,endCor):
+        newR=endCor[0]
+        newC=endCor[1]
         flag = (0<=newR<Level1.nMazeNum) and (0<=newC<Level1.nMazeNum) and (Level1.maze[newR][newC]!=1)
 
         if flag:
-            if dirX:
-                self.rect.move_ip(dirX , 0)
-                self.cor[1]=newC
-                self.time+=1
-            if dirY:
-                self.rect.move_ip(0 , dirY)
-                self.cor[0]=newR
-                self.time+=1
+            newCentre = Level1.tile_list[newR][newC].get_centre()
+            newX = newCentre[0] - self.size[0] / 2
+            newY = newCentre[1] - self.size[1] / 2
+            self.rect.x=newX
+            self.rect.y=newY
+            self.cor[0]=newR
+            self.cor[1]=newC
+            self.time+=1
+
+
 
     def get_time(self):
         return self.time
