@@ -127,11 +127,11 @@ class Level1(Level):
     princessPos = [0, 0]
     nMazeNum = 0
     tile_list=[]
+
     def __init__(self):
         super().__init__()
         self.myPlayer=Player1([0,0],[0,0],[0,0],BLACK)
 
-        
     def initialise(self):
         # 1=wall 2=player 3=princess
 
@@ -181,9 +181,9 @@ class Level1(Level):
 
                 elif Level1.maze[i][j] == 3:
                     size = [sideLength * 0.4, sideLength * 0.4]
-                    princess = Tile((t.get_centre()[0] - size[0] /2,  + t.get_centre()[1] - size[1]/2), size)
+                    princess = NPC((t.get_centre()[0] - size[0] /2,  + t.get_centre()[1] - size[1]/2), [i,j],size,RED)
                     all_sprites_group.add(princess)
-                    Level1.princessPos = [i, j]
+                    Level1.princessCor = [i, j]
 
                 Level1.tile_list[i][j]=t
 
@@ -194,7 +194,7 @@ class Level1(Level):
         visited = [[0] * Level1.nMazeNum for i in range(Level1.nMazeNum)]
         dir = [[0, 1, 0, -1], [1, 0, -1, 0]]
         startPos=self.myPlayer.get_cor()
-        endPos=Level1.princessPos
+        endPos=Level1.princessCor
         q.append([startPos[0], startPos[1], 0])
         while q:
             s = q.popleft()
@@ -229,10 +229,10 @@ class Level1(Level):
             screen.blit(gameInstruction[i],[500+10,i*30])
 
         # game information
-        if self.myPlayer.get_cor()==Level1.princessPos and self.myPlayer.get_time()==self.solution:
+        if self.myPlayer.get_cor()==Level1.princessCor and self.myPlayer.get_time()==self.solution:
             screen.blit(font.render("You Win!", True, RED), [500 + 10, 200 + 10])
             screen.blit(font.render("Congrtulations",True,RED),[500+10,200+10+30])
-        elif self.myPlayer.get_cor()==Level1.princessPos:
+        elif self.myPlayer.get_cor()==Level1.princessCor:
             screen.blit(font.render("Well done!", True, RED), [500 + 10, 200 + 10])
             screen.blit(font.render("Try to do it with", True, RED), [500 + 10, 200 + 10 + 30])
             screen.blit(font.render("fewer moves", True, RED), [500 + 10, 200 + 10 + 30*2])
@@ -262,6 +262,10 @@ class Level1(Level):
         self.restartButton.update()
         self.display_information()
 
+
+class NPC(Character):
+    def __init__(self,pos,cor,size,color):
+        Character.__init__(self,pos,cor,size,color)
 
 
 class Player1(Character):  # class Player1 is a friend of class Level1
