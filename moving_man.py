@@ -50,9 +50,7 @@ class MovingBlock(Block):
         self.rect.move_ip(self.x_vel, self.y_vel)
 
 
-
 class Player(pg.sprite.Sprite):
-
     def __init__(self,color,size,pos=(0,0)):
         super().__init__()
         self.image=pg.Surface(size)
@@ -68,9 +66,9 @@ class Player(pg.sprite.Sprite):
         self.y_vel = 0
         self.state = 0   #0:stationary 1:rising 2:falling
 
-
     def get_position(self):
         return self.rect
+
     def set_pos(self,pos):
         self.rect.x=pos[0]
         self.rect.y=pos[1]
