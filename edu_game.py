@@ -102,6 +102,7 @@ class Level(object):
         self.solution=-1
         self.retryButton=Button([500+10,400+10],[70,40],GREY,"retry")
         self.restartButton=Button([600+10,400+10],[70,40],GREY,"restart")
+        self.solutionButton=Button([500+10,450+10],[170,30],GREY,"display solution")
 
     def initialise(self):
         pass
@@ -124,13 +125,14 @@ class Level(object):
 
 class Level1(Level):
     maze=[]
-    princessPos = [0, 0]
+    princessCor = [0, 0]
     nMazeNum = 0
     tile_list=[]
 
     def __init__(self):
         super().__init__()
         self.myPlayer=Player1([0,0],[0,0],[0,0],BLACK)
+        self.solution_list=[]
 
     def initialise(self):
         # 1=wall 2=player 3=princess
@@ -167,7 +169,6 @@ class Level1(Level):
             for j in range(Level1.nMazeNum):
 
                 t = Tile((j * sideLength, i * sideLength), (sideLength, sideLength))
-                print(j * sideLength, i * sideLength)
 
                 if Level1.maze[i][j] == 1:
                     t.set_color(0)
@@ -189,17 +190,32 @@ class Level1(Level):
 
     def get_solution(self):
         self.solution=-1
-        q = deque()
-        # every element in q is a list of three integers s[0]: row num, s[1]:column number, s[2]: number of steps
+        self.solution_list = []
+        q = []
+        qHead=0
+        qTail=0
+        # every element in q is a list of three integers s[0]: row num, s[1]:column number;
+        # s[2]: number of steps, s[3]: father
         visited = [[0] * Level1.nMazeNum for i in range(Level1.nMazeNum)]
         dir = [[0, 1, 0, -1], [1, 0, -1, 0]]
         startPos=self.myPlayer.get_cor()
         endPos=Level1.princessCor
-        q.append([startPos[0], startPos[1], 0])
-        while q:
-            s = q.popleft()
+        q.append([startPos[0], startPos[1], 0, -1])
+        qTail+=1
+        while qHead!=qTail:
+            s = q[qHead]
+            print(qHead,s,"out")
             if [s[0], s[1]] == endPos:
                 self.solution=s[2]
+                father = qHead
+                while True:
+                    print(father,q[father])
+                    self.solution_list.append([q[father][0],q[father][1]])
+                    father=q[father][3]
+                    if father==-1:
+                        break
+                self.solution_list.reverse()
+                print(self.solution_list)
                 break
             for i in range(4):
                 newR = s[0] + dir[0][i]
@@ -207,8 +223,10 @@ class Level1(Level):
                 if newR < 0 or newR >= Level1.nMazeNum or newC < 0 or newC >= Level1.nMazeNum or Level1.maze[newR][
                     newC] == 1 or visited[newR][newC]:
                     continue
-                q.append([newR, newC, s[2] + 1])
+                q.append([newR, newC, s[2] + 1,qHead])
+                qTail+=1
                 visited[newR][newC] = 1
+            qHead += 1
 
     def draw_tiles(self):
         for i in range(Level1.nMazeNum):
@@ -249,17 +267,31 @@ class Level1(Level):
             all_sprites_group.empty()
             self.tile_list=[]
             self.pre_update()
-
+            
     def pre_update(self):
         self.initialise()
         self.get_solution()
 
+    def visualise_solution(self): # draw the solution onto the screen
+        for i in range(len(self.solution_list)-1):
+            s1=self.solution_list[i]
+            s2=self.solution_list[i+1]
+            t1=Level1.tile_list[s1[0]][s1[1]]
+            t2=Level1.tile_list[s2[0]][s2[1]]
+            pg.draw.line(screen,GREEN,t1.get_centre(),t2.get_centre(),3)
+
+    def display_solution(self): # detect if the solution is pressed
+        if self.solutionButton.isPressed():
+            self.visualise_solution()
+
     def update(self):
         self.draw_tiles()
-        self.retryButton.update()
         self.retry()
         self.restart()
+        self.display_solution()
+        self.retryButton.update()
         self.restartButton.update()
+        self.solutionButton.update()
         self.display_information()
 
 
