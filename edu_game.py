@@ -1,7 +1,7 @@
 import pygame as pg
 import random
 import copy
-from collections import deque
+import math
 
 
 BLACK = (0, 0, 0)
@@ -20,7 +20,7 @@ screenSize = (700, 500)
 screen = pg.display.set_mode(screenSize)
 
 
-class Character(pg.sprite.Sprite):
+class Character(pg.sprite.Sprite):  # this class is the father of player and NPC
     def __init__(self,pos,cor,size,color):
         super().__init__()
         self.image=pg.Surface(size)
@@ -44,7 +44,7 @@ class Character(pg.sprite.Sprite):
         pass
 
 
-class Tile(pg.sprite.Sprite):
+class Tile(pg.sprite.Sprite):   # tile is specific to level1
     def __init__(self,pos,size):
         super().__init__()
         self.image=pg.Surface(size)
@@ -119,6 +119,9 @@ class Level(object):
     def retry(self):    # reset the game while keeping the map the same
         pass
 
+    def pre_update(self): # pre_update will run outside the main program loop
+        pass
+
     def update(self):
         pass
 
@@ -127,22 +130,23 @@ class Level1(Level):
     maze=[]
     princessCor = [0, 0]
     nMazeNum = 0
-    tile_list=[]
+    tile_list=[]    # tile_list[i][j] means the tile with cor (i,j)
 
     def __init__(self):
         super().__init__()
         self.myPlayer=Player1([0,0],[0,0],[0,0],BLACK)
-        self.solution_list=[]
+        self.solution_list=[]   # records each step taken in the optimum solution
 
     def initialise(self):
         # 1=wall 2=player 3=princess
-
+        all_sprites_group.empty()
         Level1.nMazeNum = random.randrange(5, 30)
         Level1.maze = [[0] * Level1.nMazeNum for i in range(Level1.nMazeNum)]
-        Level1.tile_list = [[0] * Level1.nMazeNum for i in range(Level1.nMazeNum)]
+        Level1.tile_list = [[Tile([0,0],[0,0])] * Level1.nMazeNum for i in range(Level1.nMazeNum)]
 
         nSpecialElement = random.randrange(0,
-                                           int(Level1.nMazeNum * Level1.nMazeNum * 0.5))  # randrange [a,b), 60% of the Level1.maze is wall
+                                           int(Level1.nMazeNum * Level1.nMazeNum * 0.5))
+        # randrange [a,b), 60% of the Level1.maze is wall
         playerCor = random.randrange(0, Level1.nMazeNum * Level1.nMazeNum)
 
         Level1.maze[playerCor // Level1.nMazeNum][playerCor % Level1.nMazeNum] = 2
@@ -153,7 +157,6 @@ class Level1(Level):
                 break
         Level1.maze[princessCor // Level1.nMazeNum][princessCor % Level1.nMazeNum] = 3
         nSpecialElement -= 2
-        print("nSpecialElemen=", nSpecialElement, "Level1.nMazeNum=", Level1.nMazeNum)
         for i in range(nSpecialElement):
 
             while True:
@@ -163,7 +166,6 @@ class Level1(Level):
 
             Level1.maze[wallCor // Level1.nMazeNum][wallCor % Level1.nMazeNum] = 1
 
-        print(Level1.maze)
         sideLength = 500 / Level1.nMazeNum
         for i in range(Level1.nMazeNum):
             for j in range(Level1.nMazeNum):
@@ -186,7 +188,7 @@ class Level1(Level):
                     all_sprites_group.add(princess)
                     Level1.princessCor = [i, j]
 
-                Level1.tile_list[i][j]=t
+                Level1.tile_list[i][j] = t
 
     def get_solution(self):
         self.solution=-1
@@ -204,18 +206,15 @@ class Level1(Level):
         qTail+=1
         while qHead!=qTail:
             s = q[qHead]
-            print(qHead,s,"out")
             if [s[0], s[1]] == endPos:
                 self.solution=s[2]
                 father = qHead
                 while True:
-                    print(father,q[father])
                     self.solution_list.append([q[father][0],q[father][1]])
                     father=q[father][3]
                     if father==-1:
                         break
                 self.solution_list.reverse()
-                print(self.solution_list)
                 break
             for i in range(4):
                 newR = s[0] + dir[0][i]
@@ -228,12 +227,11 @@ class Level1(Level):
                 visited[newR][newC] = 1
             qHead += 1
 
-    def draw_tiles(self):
+    def draw_tiles(self): # draw all tiles onto the screen in the tile_list
         for i in range(Level1.nMazeNum):
             for j in range(Level1.nMazeNum):
                 t=Level1.tile_list[i][j]
                 pg.draw.rect(screen,BLACK,t.get_rect(),t.get_color()*1)
-
 
     def display_information(self):
         # game instruction
@@ -258,16 +256,16 @@ class Level1(Level):
         screen.blit(font.render("steps taken: "+str(self.myPlayer.get_time()),True,BLACK),[500+10,300+10])
         screen.blit(font.render("steps required: " + str(self.solution), True, BLACK), [500 + 10, 300 + 10+30])
 
-    def retry(self):
+    def retry(self):    # reset the player position and the maze stays unchanged
         if self.retryButton.isPressed():
             self.myPlayer.reset()
 
-    def restart(self):
+    def restart(self):  # the maze is re-generated
         if self.restartButton.isPressed():
             all_sprites_group.empty()
             self.tile_list=[]
             self.pre_update()
-            
+
     def pre_update(self):
         self.initialise()
         self.get_solution()
@@ -331,8 +329,6 @@ class Player1(Character):  # class Player1 is a friend of class Level1
             self.cor[1]=newC
             self.time+=1
 
-
-
     def get_time(self):
         return self.time
 
@@ -343,24 +339,104 @@ class Player1(Character):  # class Player1 is a friend of class Level1
         self.time=self.oriTime
 
 
+class Node(pg.sprite.Sprite):   # node is specific to level2
+    def __init__(self,pos,size,color):
+        super().__init__()
+        self.radius=size
+        self.centre=pos
+        self.color=color
+
+    def get_centre(self):
+        return self.centre
+
+    def get_size(self):
+        return self.radius
+
+    def get_color(self):
+        return self.color
+
+
+class Level2(Level):
+    nNodeNum=0
+    graph=[]    # graph is
+    node_list=[]
+
+    def __init__(self):
+        super().__init__()
+
+
+    def initialise(self):
+        # randomly generate graph
+        Level2.nNodeNum=random.randrange(3,30)
+        Level2.graph=[[] for i in range(Level2.nNodeNum)]
+        for i in range(Level2.nNodeNum):
+            outDegree=random.randrange(1,Level2.nNodeNum)
+            for j in range(outDegree):
+                n=random.randrange(0,Level2.nNodeNum)
+                w=random.randrange(1,100)
+                Level2.graph[i].append([n,w])
+
+        num=int(math.sqrt(Level2.nNodeNum))+1
+        sep=500/num
+        i = 0
+        j = 0
+        for k in range(Level2.nNodeNum):
+            startX=int(j*sep)
+            endX=int((j+1)*sep)
+            startY=int(i*sep)
+            endY=int((i+1)*sep)
+            circlePos=[random.randint(startX,endX),random.randint(startY,endY)]
+            radius=min(circlePos[0]-startX,endX-circlePos[0],circlePos[1]-startY,endY-circlePos[1])
+            Level2.node_list.append(Node(circlePos,radius,BLACK))
+            j+=1
+            if j == num:
+                i += 1
+                j %= num
+
+    def draw_nodes(self):
+        for i in range(Level2.nNodeNum):
+            n=Level2.node_list[i]
+            pg.draw.circle(screen,n.get_color(),n.get_centre(),n.get_size())
+
+    def get_solution(self):  # find the optimum solution of a problem
+        pass
+
+    def display_information(self):  # display necessary information of the game, such as life, time steps
+        pass
+
+    def restart(self):  # start the game again
+        pass
+
+    def retry(self):  # reset the game while keeping the map the same
+        pass
+
+    def pre_update(self):  # pre_update will run outside the main program loop
+        self.initialise()
+        # print("node num",Level2.nNodeNum)
+        # for i in range(Level2.nNodeNum):
+        #     for j in range(len(Level2.graph[i])):
+        #         print(Level2.graph[i][j],end=' ')
+        #     print()
+
+    def update(self):
+        self.draw_nodes()
+
 done = False
 
-l1=Level1()
-l1.pre_update()
+curLevel=Level2()
+curLevel.pre_update()
 
 while not done:
     for event in pg.event.get():
         if event.type == pg.QUIT:
             done=True
         elif event.type == pg.KEYDOWN:
-            l1.myPlayer.tracking_key(event.key)
-
-
+            curLevel.myPlayer.tracking_key(event.key)
 
 
     screen.fill(WHITE)
     all_sprites_group.draw(screen)
-    l1.update()   # this line must be after the group draw code
+    curLevel.update()   # this line must be after the group draw code
 
 
     pg.display.flip()
