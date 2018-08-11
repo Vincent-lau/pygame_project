@@ -358,7 +358,7 @@ class Node(pg.sprite.Sprite):   # node is specific to level2
 
 class Level2(Level):
     nNodeNum=0
-    graph=[]    # graph is
+    graph=[]    # graph is adjacency list where each element is [nodeNum,weight]
     node_list=[]
 
     def __init__(self):
@@ -376,18 +376,20 @@ class Level2(Level):
                 w=random.randrange(1,100)
                 Level2.graph[i].append([n,w])
 
+        # generate the position of every node
         num=int(math.sqrt(Level2.nNodeNum))+1
         sep=500/num
         i = 0
         j = 0
         for k in range(Level2.nNodeNum):
-            startX=int(j*sep)
-            endX=int((j+1)*sep)
-            startY=int(i*sep)
-            endY=int((i+1)*sep)
-            circlePos=[random.randint(startX,endX),random.randint(startY,endY)]
+            startX=int((j+0.1)*sep)  # leave some blank space
+            endX=int((j+0.9)*sep)
+            startY=int((i+0.1)*sep)
+            endY=int((i+0.9)*sep)
+            circlePos=[random.randint(int(startX+sep*0.2),int(endX-sep*0.2)),random.randint(int(startY+sep*0.2),int(endY-sep*0.2))]
+            # make sure the node is not too small
             radius=min(circlePos[0]-startX,endX-circlePos[0],circlePos[1]-startY,endY-circlePos[1])
-            Level2.node_list.append(Node(circlePos,radius,BLACK))
+            Level2.node_list.append(Node(circlePos,radius,DARKGREY))
             j+=1
             if j == num:
                 i += 1
@@ -397,6 +399,15 @@ class Level2(Level):
         for i in range(Level2.nNodeNum):
             n=Level2.node_list[i]
             pg.draw.circle(screen,n.get_color(),n.get_centre(),n.get_size())
+
+    def draw_edges(self):
+        for i in range(Level2.nNodeNum):
+            for j in range(len(Level2.graph[i])):
+                c=(random.randint(0,255),random.randint(0,255),random.randint(0,255))
+                n1=Level2.node_list[i]
+                n2=Level2.node_list[Level2.graph[i][j][0]]
+                pg.draw.line(screen,c,n1.get_centre(),n2.get_centre(),3)
+
 
     def get_solution(self):  # find the optimum solution of a problem
         pass
@@ -420,6 +431,7 @@ class Level2(Level):
 
     def update(self):
         self.draw_nodes()
+        self.draw_edges()
 
 done = False
 
