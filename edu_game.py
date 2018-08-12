@@ -31,11 +31,21 @@ class Character(pg.sprite.Sprite):  # this class is the father of player and NPC
         self.cor=cor    # cor[0] is the row number and cor[1] is the column number
         self.size=size
 
-    def tracking_key(self,keys):
+    def tracking_event(self,keys):
         pass
 
     def move(self,endPos):
         pass
+
+    def set_pos(self,pos):
+        self.rect.x=pos[0]-self.size[0]/2
+        self.rect.y=pos[1]-self.size[1]/2
+
+    def set_cor(self,cor):
+        self.cor=cor
+
+    def set_size(self,size):
+        self.size=size
 
     def get_cor(self):
         return self.cor
@@ -247,7 +257,7 @@ class Level1(Level):
         # game information
         if self.myPlayer.get_cor()==Level1.princessCor and self.myPlayer.get_time()==self.solution:
             screen.blit(font.render("You Win!", True, RED), [500 + 10, 200 + 10])
-            screen.blit(font.render("Congrtulations",True,RED),[500+10,200+10+30])
+            screen.blit(font.render("Congratulations",True,RED),[500+10,200+10+30])
         elif self.myPlayer.get_cor()==Level1.princessCor:
             screen.blit(font.render("Well done!", True, RED), [500 + 10, 200 + 10])
             screen.blit(font.render("Try to do it with", True, RED), [500 + 10, 200 + 10 + 30])
@@ -304,7 +314,7 @@ class Player1(Character):  # class Player1 is a friend of class Level1
         Character.__init__(self,pos, cor, size, color)
         self.oriTime=self.time=0
 
-    def tracking_key(self,keys):
+    def tracking_event(self,keys):
         if keys==pg.K_RIGHT:
             self.move([self.cor[0],self.cor[1]+1])
         elif keys==pg.K_LEFT:
@@ -340,11 +350,18 @@ class Player1(Character):  # class Player1 is a friend of class Level1
 
 
 class Node(pg.sprite.Sprite):   # node is specific to level2
-    def __init__(self,pos,size,color):
+    def __init__(self,pos,size,num,color):
         super().__init__()
         self.radius=size
         self.centre=pos
         self.color=color
+        self.num=num
+        self.weight=0
+
+    def isMouseOver(self):
+        mousePos = pg.mouse.get_pos()
+        return self.centre[0]-self.radius < mousePos[0] < self.centre[0] + self.radius and \
+            self.centre[1]-self.radius < mousePos[1] < self.centre[1] + self.radius
 
     def get_centre(self):
         return self.centre
@@ -355,6 +372,51 @@ class Node(pg.sprite.Sprite):   # node is specific to level2
     def get_color(self):
         return self.color
 
+    def set_weight(self,w):
+        self.weight=w
+
+    def get_num(self):
+        return self.num
+
+    def get_weight(self):
+        return self.weight
+
+
+class Player2(Character):
+    def __init__(self,pos,cor,size,color):
+        Character.__init__(self,pos,cor,size,color)
+        self.time=0
+
+    def tracking_event(self,button):
+        pass
+        if button==1: # left key pressed
+            for n in Level2.node_list:
+                if n.isMouseOver():
+                    self.move(n)
+
+    def move(self,node):
+        flag=False
+        for n in Level2.graph[self.cor]:
+            if n.num==node.num:
+                flag=True
+                break
+
+        if flag:
+            self.time+=node.weight
+            self.cor=node.num
+            p=node.get_centre()
+            newX=p[0]-self.size[0]/2
+            newY=p[1]-self.size[1]/2
+            self.rect.x=newX
+            self.rect.y=newY
+
+
+    def reset(self):
+        self.cor = copy.deepcopy(self.oriCor)  # any oriCor must be deeply copied
+        self.rect.x = self.oriPos[0]
+        self.rect.y = self.oriPos[1]
+        self.time=0
+
 
 class Level2(Level):
     nNodeNum=0
@@ -363,24 +425,16 @@ class Level2(Level):
 
     def __init__(self):
         super().__init__()
-
+        self.myPlayer=Player2([0,0],0,[0,0],BLUE)
 
     def initialise(self):
-        # randomly generate graph
         Level2.nNodeNum=random.randrange(3,30)
-        Level2.graph=[[] for i in range(Level2.nNodeNum)]
-        for i in range(Level2.nNodeNum):
-            outDegree=random.randrange(1,Level2.nNodeNum)
-            for j in range(outDegree):
-                n=random.randrange(0,Level2.nNodeNum)
-                w=random.randrange(1,100)
-                Level2.graph[i].append([n,w])
-
         # generate the position of every node
         num=int(math.sqrt(Level2.nNodeNum))+1
         sep=500/num
         i = 0
         j = 0
+        minR=500
         for k in range(Level2.nNodeNum):
             startX=int((j+0.1)*sep)  # leave some blank space
             endX=int((j+0.9)*sep)
@@ -389,11 +443,35 @@ class Level2(Level):
             circlePos=[random.randint(int(startX+sep*0.2),int(endX-sep*0.2)),random.randint(int(startY+sep*0.2),int(endY-sep*0.2))]
             # make sure the node is not too small
             radius=min(circlePos[0]-startX,endX-circlePos[0],circlePos[1]-startY,endY-circlePos[1])
-            Level2.node_list.append(Node(circlePos,radius,DARKGREY))
+            minR=min(radius,minR)
+            Level2.node_list.append(Node(circlePos,radius,k,DARKGREY))
             j+=1
             if j == num:
                 i += 1
                 j %= num
+
+        # generate the graph in a adjacency list
+        Level2.graph = [[] for i in range(Level2.nNodeNum)]
+        for i in range(Level2.nNodeNum):
+            used = [0] * (Level2.nNodeNum + 1)
+            used[i]=1
+            outDegree = random.randrange(1, int(Level2.nNodeNum*0.8))
+            j=0
+            while j < outDegree:
+                n = random.randrange(0, Level2.nNodeNum)
+                if used[n]:
+                    continue
+                used[n]=1
+                j+=1
+                w = random.randrange(1, 100)
+                node=Level2.node_list[n]
+                node.set_weight(w)
+                Level2.graph[i].append(node)
+
+        # initialise the player
+        n=Level2.node_list[random.randrange(0, Level2.nNodeNum)]
+        self.myPlayer=Player2([n.get_centre()[0]-minR/2,n.get_centre()[1]-minR/2],n.num,[minR,minR],BLUE)
+        all_sprites_group.add(self.myPlayer)
 
     def draw_nodes(self):
         for i in range(Level2.nNodeNum):
@@ -401,13 +479,29 @@ class Level2(Level):
             pg.draw.circle(screen,n.get_color(),n.get_centre(),n.get_size())
 
     def draw_edges(self):
+        for n in Level2.node_list:
+            if n.isMouseOver():
+                self.draw_edges_from_node(n)
+
+        n=Level2.node_list[self.myPlayer.get_cor()]
+        self.draw_edges_from_node(n)
+
+    def draw_all_edges(self):
         for i in range(Level2.nNodeNum):
             for j in range(len(Level2.graph[i])):
-                c=(random.randint(0,255),random.randint(0,255),random.randint(0,255))
                 n1=Level2.node_list[i]
-                n2=Level2.node_list[Level2.graph[i][j][0]]
-                pg.draw.line(screen,c,n1.get_centre(),n2.get_centre(),3)
+                n2=Level2.node_list[Level2.graph[i][j]]
+                pg.draw.aaline(screen,GREEN,n1.get_centre(),n2.get_centre())
 
+    def draw_edges_from_node(self,node):
+        font = pg.font.SysFont('Calibri', 20, True, False)
+        for i in range(len(Level2.graph[node.num])):
+            n1=node
+            n2=Level2.graph[n1.num][i]
+            p1=n1.get_centre()
+            p2=n2.get_centre()
+            screen.blit(font.render(str(n2.weight),True,BLACK),[(p1[0]+p2[0])/2,(p1[1]+p2[1])/2])
+            pg.draw.aaline(screen, GREEN, p1,p2)
 
     def get_solution(self):  # find the optimum solution of a problem
         pass
@@ -432,6 +526,8 @@ class Level2(Level):
     def update(self):
         self.draw_nodes()
         self.draw_edges()
+        all_sprites_group.draw(screen)
+
 
 done = False
 
@@ -443,7 +539,9 @@ while not done:
         if event.type == pg.QUIT:
             done=True
         elif event.type == pg.KEYDOWN:
-            curLevel.myPlayer.tracking_key(event.key)
+            curLevel.myPlayer.tracking_event(event.key)
+        elif event.type==pg.MOUSEBUTTONDOWN:
+            curLevel.myPlayer.tracking_event(event.button)
 
 
     screen.fill(WHITE)
