@@ -402,6 +402,7 @@ class Player2(Character):
                 break
 
         if flag:
+            Level2.visited_node.append(node)
             self.time+=node.weight
             self.cor=node.num
             p=node.get_centre()
@@ -409,7 +410,6 @@ class Player2(Character):
             newY=p[1]-self.size[1]/2
             self.rect.x=newX
             self.rect.y=newY
-
 
     def reset(self):
         self.cor = copy.deepcopy(self.oriCor)  # any oriCor must be deeply copied
@@ -422,6 +422,7 @@ class Level2(Level):
     nNodeNum=0
     graph=[]    # graph is adjacency list where each element is [nodeNum,weight]
     node_list=[]
+    visited_node=[]
 
     def __init__(self):
         super().__init__()
@@ -471,29 +472,40 @@ class Level2(Level):
         # initialise the player
         n=Level2.node_list[random.randrange(0, Level2.nNodeNum)]
         self.myPlayer=Player2([n.get_centre()[0]-minR/2,n.get_centre()[1]-minR/2],n.num,[minR,minR],BLUE)
+        Level2.visited_node.append(n)
         all_sprites_group.add(self.myPlayer)
 
-    def draw_nodes(self):
+    @staticmethod
+    def draw_nodes():
         for i in range(Level2.nNodeNum):
             n=Level2.node_list[i]
             pg.draw.circle(screen,n.get_color(),n.get_centre(),n.get_size())
+
+    @staticmethod
+    def draw_visited_edges():
+        for i in range(len(Level2.visited_node)-1):
+            n1=Level2.visited_node[i]
+            n2=Level2.visited_node[i+1]
+            pg.draw.line(screen,GREEN,n1.get_centre(),n2.get_centre(),3)
 
     def draw_edges(self):
         for n in Level2.node_list:
             if n.isMouseOver():
                 self.draw_edges_from_node(n)
 
-        n=Level2.node_list[self.myPlayer.get_cor()]
-        self.draw_edges_from_node(n)
+        # n=Level2.node_list[self.myPlayer.get_cor()]
+        # self.draw_edges_from_node(n)
 
-    def draw_all_edges(self):
+    @staticmethod
+    def draw_all_edges():
         for i in range(Level2.nNodeNum):
             for j in range(len(Level2.graph[i])):
                 n1=Level2.node_list[i]
                 n2=Level2.node_list[Level2.graph[i][j]]
                 pg.draw.aaline(screen,GREEN,n1.get_centre(),n2.get_centre())
 
-    def draw_edges_from_node(self,node):
+    @staticmethod
+    def draw_edges_from_node(node):
         font = pg.font.SysFont('Calibri', 20, True, False)
         for i in range(len(Level2.graph[node.num])):
             n1=node
@@ -513,7 +525,10 @@ class Level2(Level):
         pass
 
     def retry(self):  # reset the game while keeping the map the same
-        pass
+
+        Level2.visited_node=[]
+        self.myPlayer.reset()
+
 
     def pre_update(self):  # pre_update will run outside the main program loop
         self.initialise()
@@ -526,6 +541,7 @@ class Level2(Level):
     def update(self):
         self.draw_nodes()
         self.draw_edges()
+        self.draw_visited_edges()
         all_sprites_group.draw(screen)
 
 
