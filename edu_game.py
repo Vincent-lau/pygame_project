@@ -12,6 +12,7 @@ DARKGREY=(169,169,169)
 GREY=(96,96,96)
 RED = (255, 0, 0)
 BLUE=(0,0,255)
+INF=2**31
 
 all_sprites_group=pg.sprite.Group()
 pg.init()
@@ -25,9 +26,10 @@ class Character(pg.sprite.Sprite):  # this class is the father of player and NPC
     def __init__(self,pos,cor,size,color):
         super().__init__()
         self.image=pg.Surface(size)
-        self.oriPos=pos
-        self.rect=self.image.get_rect(topleft=[pos[0]-size[0]/2,pos[1]-size[1]/2])
+        pos=[pos[0]-size[0]/2,pos[1]-size[1]/2]
         # pos parameter will be the centre of the shape
+        self.oriPos=pos
+        self.rect=self.image.get_rect(topleft=pos)
         self.image.fill(color)
         self.oriCor=copy.deepcopy(cor) # any oriCor must use deepcopy
         self.cor=cor    # cor[0] is the row number and cor[1] is the column number
@@ -112,7 +114,7 @@ class Button(object):
 class Level(object):
     def __init__(self): 
         self.solution=-1
-
+        self.button_list = []
 
     def initialise(self):
         pass
@@ -282,17 +284,14 @@ class Level1(Level):
         self.initialise()
         self.get_solution()
 
-    def visualise_solution(self): # draw the solution onto the screen
-        for i in range(len(self.solution_list)-1):
-            s1=self.solution_list[i]
-            s2=self.solution_list[i+1]
-            t1=Level1.tile_list[s1[0]][s1[1]]
-            t2=Level1.tile_list[s2[0]][s2[1]]
-            pg.draw.line(screen,GREEN,t1.get_centre(),t2.get_centre(),3)
-
-    def display_solution(self): # detect if the solution is pressed
+    def display_solution(self):
         if self.solutionButton.isPressed():
-            self.visualise_solution()
+            for i in range(len(self.solution_list) - 1):
+                s1 = self.solution_list[i]
+                s2 = self.solution_list[i + 1]
+                t1 = Level1.tile_list[s1[0]][s1[1]]
+                t2 = Level1.tile_list[s2[0]][s2[1]]
+                pg.draw.line(screen, GREEN, t1.get_centre(), t2.get_centre(), 3)
 
     def update(self):
         all_sprites_group.draw(screen)
@@ -411,18 +410,36 @@ class Player2(Character):
         if flag:
             Level2.visited_node.append(node)
             self.time+=node.weight
-            self.cor=node.num
+            self.cor = node.num
             p=node.get_centre()
-            newX=p[0]-self.size[0]/2
-            newY=p[1]-self.size[1]/2
-            self.rect.x=newX
-            self.rect.y=newY
+            newX = p[0]-self.size[0]/2
+            newY = p[1]-self.size[1]/2
+            self.rect.x = newX
+            self.rect.y = newY
+
+    def move_back(self):
+        if len(Level2.visited_node) > 1:
+            n2 = Level2.visited_node.pop()
+            n1 = Level2.visited_node[-1]
+            self.cor = n1.num
+            p = n1.get_centre()
+            newX = p[0] - self.size[0] / 2
+            newY = p[1] - self.size[1] / 2
+            self.rect.x = newX
+            self.rect.y = newY
+            for n in Level2.graph[n1.num]:
+                if n2.num == n.num:
+                    self.time -= n.weight
+                    break
 
     def reset(self):
         self.cor = copy.deepcopy(self.oriCor)  # any oriCor must be deeply copied
         self.rect.x = self.oriPos[0]
         self.rect.y = self.oriPos[1]
         self.time=0
+
+    def get_time(self):
+        return self.time
 
 
 class Level2(Level):
@@ -435,17 +452,17 @@ class Level2(Level):
     def __init__(self):
         super().__init__()
         self.myPlayer=Player2([0,0],0,[0,0],BLUE)
-        self.button_list=[]
         self.retryButton=Button([screenSize[1]+10,350],[85,40],GREY,"retry")
         self.button_list.append(self.retryButton)
         self.restartButton=Button([screenSize[1]+100,350],[85,40],GREY,"restart")
         self.button_list.append(self.restartButton)
         self.backButton=Button([screenSize[1]+10,400],[85,40],GREY,"back")
         self.button_list.append(self.backButton)
-        self.allEdgesButton=Button([screenSize[1]+100,400],[85,40],GREY,"all edges")
+        self.allEdgesButton=Button([screenSize[1]+100,400],[88,40],GREY,"all edges")
         self.button_list.append(self.allEdgesButton)
-        self.solutionButton=Button([screenSize[1]+10,450],[170,40],GREY,"display solution")
+        self.solutionButton=Button([screenSize[1]+10,450],[180,40],GREY,"display solution")
         self.button_list.append(self.solutionButton)
+        self.solution_list=[]
 
     def initialise(self):
         Level2.nNodeNum=random.randrange(3,30)
@@ -487,6 +504,13 @@ class Level2(Level):
                 node=Level2.node_list[n]
                 node.set_weight(w)
                 Level2.graph[i].append(node)
+        #
+        # print("node num",Level2.nNodeNum)
+        # for i in range(Level2.nNodeNum):
+        #     for j in range(len(Level2.graph[i])):
+        #         n=Level2.graph[i][j]
+        #         print("num:",n.num,"weight",n.weight,end="  ")
+        #     print()
 
         # initialise the player
         n1=Level2.node_list[random.randrange(0, Level2.nNodeNum)]
@@ -500,8 +524,6 @@ class Level2(Level):
                 all_sprites_group.add(princess)
                 Level2.princessCor=n2.num
                 break
-
-
 
     @staticmethod
     def draw_nodes():
@@ -521,16 +543,19 @@ class Level2(Level):
             if n.isMouseOver():
                 self.draw_edges_from_node(n)
 
-        # n=Level2.node_list[self.myPlayer.get_cor()]
-        # self.draw_edges_from_node(n)
+        n=Level2.node_list[self.myPlayer.get_cor()]
+        self.draw_edges_from_node(n)
 
     @staticmethod
     def draw_all_edges():
         for i in range(Level2.nNodeNum):
             for j in range(len(Level2.graph[i])):
                 n1=Level2.node_list[i]
-                n2=Level2.node_list[Level2.graph[i][j]]
+                n2=Level2.graph[i][j]
                 pg.draw.aaline(screen,GREEN,n1.get_centre(),n2.get_centre())
+                # p1 = n1.get_centre()
+                # p2 = n2.get_centre()
+                # screen.blit(font.render(str(n2.weight), True, BLACK), [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2])
 
     @staticmethod
     def draw_edges_from_node(node):
@@ -538,33 +563,45 @@ class Level2(Level):
         for i in range(len(Level2.graph[node.num])):
             n1=node
             n2=Level2.graph[n1.num][i]
-            p1=n1.get_centre()
-            p2=n2.get_centre()
+            p1 = n1.get_centre()
+            p2 = n2.get_centre()
             screen.blit(font.render(str(n2.weight),True,BLACK),[(p1[0]+p2[0])/2,(p1[1]+p2[1])/2])
             pg.draw.aaline(screen, GREEN, p1,p2)
 
-    def get_solution(self,):  # find the optimum solution of a problem
+    def get_solution(self):  # find the optimum solution of a problem
+        self.solution_list=[]
         visited=[0]*Level2.nNodeNum
+        dist=[INF]*Level2.nNodeNum
+        prev=[0]*Level2.nNodeNum
         pq=queue.PriorityQueue()
-        nd=Level2.node_list[self.myPlayer.get_cor()]
+        nd=copy.deepcopy(Level2.node_list[self.myPlayer.get_cor()])
         nd.set_weight(0)
         pq.put(nd)
+        prev[nd.num]=-1
+        dist[nd.num]=0
         while not pq.empty():
             nd=pq.get()
-            print(nd.num,nd.weight)
             if visited[nd.num]:
                 continue
             if nd.num == Level2.princessCor:
-                self.solution=nd.weight
+                self.solution=dist[nd.num]
+                father=nd.num
+                while True:
+                    self.solution_list.append(father)
+                    if prev[father] == -1:
+                        break
+                    father = prev[father]
+                self.solution_list.reverse()
+                print(self.solution_list)
                 break
             visited[nd.num]=1
             for n in Level2.graph[nd.num]:
                 if visited[n.num]:
                     continue
-                newNode=copy.deepcopy(n)
-                newNode.set_weight(nd.weight+n.weight)
-                pq.put(newNode)
-        print("solution",self.solution)
+                if dist[n.num] > dist[nd.num] + n.weight:
+                    dist[n.num] = dist[nd.num] + n.weight
+                    prev[n.num] = nd.num
+                    pq.put(n)
 
     def display_information(self):  # display necessary information of the game, such as life, time steps
         # game instruction
@@ -578,47 +615,63 @@ class Level2(Level):
             screen.blit(gameInstruction[i], [500 + 10, i * 30])
 
         # game information
-        # if self.myPlayer.get_cor() == Level2.princessCor and self.myPlayer.get_time() == self.solution:
-        #     screen.blit(font.render("You Win!", True, RED), [500 + 10, 200 + 10])
-        #     screen.blit(font.render("Congratulations", True, RED), [500 + 10, 200 + 10 + 30])
-        # elif self.myPlayer.get_cor() == Level1.princessCor:
-        #     screen.blit(font.render("Well done!", True, RED), [500 + 10, 200 + 10])
-        #     screen.blit(font.render("Try to do it with", True, RED), [500 + 10, 200 + 10 + 30])
-        #     screen.blit(font.render("fewer moves", True, RED), [500 + 10, 200 + 10 + 30 * 2])
-        #
-        # screen.blit(font.render("steps taken: " + str(self.myPlayer.get_time()), True, BLACK), [500 + 10, 300 + 10])
-        # screen.blit(font.render("steps required: " + str(self.solution), True, BLACK), [500 + 10, 300 + 10 + 30])
+        if self.myPlayer.get_cor() == Level2.princessCor and self.myPlayer.get_time() == self.solution:
+            screen.blit(font.render("You Win!", True, RED), [screenSize[1] + 10, 200 + 10])
+            screen.blit(font.render("Congratulations", True, RED), [screenSize[1] + 10, 200 + 10 + 30])
+        elif self.myPlayer.get_cor() == Level2.princessCor:
+            screen.blit(font.render("Well done!", True, RED), [screenSize[1] + 10, 200 + 10])
+            screen.blit(font.render("Try to do it with", True, RED), [screenSize[1] + 10, 200 + 10 + 20])
+            screen.blit(font.render("fewer moves", True, RED), [screenSize[1] + 10, 200 + 10 + 20 * 2])
+
+        screen.blit(font.render("path length: " + str(self.myPlayer.get_time()), True, BLACK), [screenSize[1] + 10, 275 + 10])
+        screen.blit(font.render("shortest path: " + str(self.solution), True, BLACK), [screenSize[1] + 10, 275 + 10 + 30])
 
     def restart(self):  # start the game again
         if self.restartButton.isPressed():
+            all_sprites_group.empty()
             Level2.graph=[]
             Level2.node_list=[]
             Level2.visited_node=[]
             self.pre_update()
+            self.myPlayer.reset()
+
+    def back(self):
+        if self.backButton.isPressed():
+            self.myPlayer.move_back()
 
     def retry(self):  # reset the game while keeping the map the same
         if self.retryButton.isPressed():
             Level2.visited_node=[]
             self.myPlayer.reset()
 
+    def display_all_edges(self):
+        if self.allEdgesButton.isPressed():
+            self.draw_all_edges()
+
+    def display_solution(self):
+        if self.solutionButton.isPressed():
+            for i in range(len(self.solution_list)-1):
+                n1=Level2.node_list[self.solution_list[i]]
+                n2=Level2.node_list[self.solution_list[i+1]]
+                pg.draw.line(screen, RED, n1.get_centre(), n2.get_centre(), 3)
 
     def pre_update(self):  # pre_update will run outside the main program loop
         self.initialise()
         self.get_solution()
-        # print("node num",Level2.nNodeNum)
-        # for i in range(Level2.nNodeNum):
-        #     for j in range(len(Level2.graph[i])):
-        #         print(Level2.graph[i][j],end=' ')
-        #     print()
 
     def update(self):
         self.draw_nodes()
         self.draw_edges()
         self.draw_visited_edges()
+        self.display_information()
+
         for b in self.button_list:
             b.update()
         self.retry()
-        self.display_information()
+        self.restart()
+        self.display_all_edges()
+        self.back()
+        self.display_solution()
         all_sprites_group.draw(screen)
 
 
