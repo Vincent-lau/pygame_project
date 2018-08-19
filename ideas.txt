@@ -31,22 +31,42 @@ bebras challenge
 
 
 
-saving the princess
+saving the princess 百练 4980 adapted
 add grid lines
 movement of the knight
 knight blocked by the wall and boundary
 add princess
 general form of the maze
 Bfs in Python and implementation details
-
-give task and instructions to the user button and display information
-display solutions
 define level as a class and different levels derive from the general level
+give task and instructions to the user, and display information
+button effect /mouse press
+组合所有effect of the class level1
+every tile as an object
+display solutions
 level of increasing difficulty
 
 
-
-consider general forms of drawing lines and walls
-Bfs
 add more elements, e.g. enemies
+
+Candies POJ 3159
+打包不同的level
+shortest path to save the princess
+generate the graph
+draw the graph on the screen, draw the edge
+display the edge when mouse is over the node
+node weight problem nodes stored in the graph
+display weight
+display the edge when the player is in the node
+highlight selected edges
+Dijkstra's
+game information method in Level2   path taken shortest path....  Congratulations
+display all edges button
+back button
+display solution
+
+
+
+
+
 

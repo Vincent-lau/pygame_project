@@ -677,7 +677,7 @@ class Level2(Level):
 
 done = False
 
-curLevel=Level2()
+curLevel=Level1()
 curLevel.pre_update()
 
 while not done:
