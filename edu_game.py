@@ -22,7 +22,7 @@ screenSize = (700, 500)
 screen = pg.display.set_mode(screenSize)
 
 
-class Character(pg.sprite.Sprite):  # this class is the father of player and NPC
+class Element(pg.sprite.Sprite):  # this class is the father class of all relevant classes in the game
     def __init__(self,pos,cor,size,color):
         super().__init__()
         self.image=pg.Surface(size)
@@ -306,15 +306,15 @@ class Level1(Level):
 
 
 
-class NPC(Character):
+class NPC(Element):
     def __init__(self,pos,cor,size,color):
-        Character.__init__(self,pos,cor,size,color)
+        Element.__init__(self, pos, cor, size, color)
 
 
-class Player1(Character):  # class Player1 is a friend of class Level1
+class Player1(Element):  # class Player1 is a friend of class Level1
 
     def __init__(self, pos, cor, size, color):
-        Character.__init__(self,pos, cor, size, color)
+        Element.__init__(self, pos, cor, size, color)
         self.oriTime=self.time=0
 
     def tracking_event(self,keys):
@@ -388,9 +388,9 @@ class Node(pg.sprite.Sprite):   # node is specific to level2
         return self.weight<other.weight
 
 
-class Player2(Character):
+class Player2(Element):
     def __init__(self,pos,cor,size,color):
-        Character.__init__(self,pos,cor,size,color)
+        Element.__init__(self, pos, cor, size, color)
         self.time=0
 
     def tracking_event(self,button):
@@ -674,10 +674,78 @@ class Level2(Level):
         self.display_solution()
         all_sprites_group.draw(screen)
 
+class Item(Element):
+    def __init__(self,pos,size,color,cor,v,w):
+        Element.__init__(self, pos, cor,size, color)
+        self.volume=v
+        self.weight=w
+
+
+class Bag(Element):
+    def __init__(self,pos,size,color,cor,v):
+        Element.__init__(self,pos,cor,size,color)
+        self.volume=v
+        self.weight=0
+
+    def set_weight(self,w):
+        self.weight=w
+
+    def set_volume(self,v):
+        self.volume=v
+
+class Level3(Level):
+    nBagNum=0
+    def __init__(self):
+        self.myPlayer=Bag([250,65],[100,70],RED,0,random.randint(10,100))
+        all_sprites_group.empty()
+        all_sprites_group.add(self.myPlayer)
+
+
+    def initialise(self):
+        Level3.nBagNum=random.randrange(4,30)
+
+        numX=int(math.sqrt(10/7*Level3.nBagNum))+1
+        numY=int(math.sqrt(7/10*Level3.nBagNum))+1
+        print(Level3.nBagNum,numX,numY)
+        sepX=500/numX
+        sepY=350/numY
+        i=0
+        j=0
+        for k in range(Level3.nBagNum):
+            startX=int((j+0.3)*sepX)
+            endX=int((j+0.7)*sepX)
+            startY = 150+int((i + 0.3) * sepY)
+            endY = 150 + int((i + 0.7) * sepY)
+            itemPos=[startX,startY]
+            size=[endX-startX,endY-startY]
+            v=random.randrange(5,50)
+            w=random.randrange(1,100)
+            all_sprites_group.add(Item(itemPos,size,BLACK,k,v,w))
+            j+=1
+            if j == numX:
+                i+=1
+                j%=numX
+
+
+    def get_solution(self):  # find the optimum solution of a problem
+        pass
+
+    def display_information(self):  # display necessary information of the game, such as life, time steps
+      pass
+
+
+    def pre_update(self):  # pre_update will run outside the main program loop
+        self.initialise()
+        self.get_solution()
+
+    def update(self):
+
+        all_sprites_group.draw(screen)
+
 
 done = False
 
-curLevel=Level1()
+curLevel=Level3()
 curLevel.pre_update()
 
 while not done:
@@ -689,10 +757,8 @@ while not done:
         elif event.type==pg.MOUSEBUTTONDOWN:
             curLevel.myPlayer.tracking_event(event.button)
 
-
     screen.fill(WHITE)
     curLevel.update()   # this line must be after the group draw code
-
 
     pg.display.flip()
     clock.tick(60)
