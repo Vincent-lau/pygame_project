@@ -27,8 +27,8 @@ class Element(pg.sprite.Sprite):  # this class is the father class of all releva
         super().__init__()
         self.image=pg.Surface(size)
         pos=[pos[0]-size[0]/2,pos[1]-size[1]/2]
-        # pos parameter will be the centre of the shape
-        self.oriPos=pos
+        # pos parameter will be the top-left corner of the shape
+        self.oriPos=copy.deepcopy(pos)
         self.rect=self.image.get_rect(topleft=pos)
         self.image.fill(color)
         self.oriCor=copy.deepcopy(cor) # any oriCor must use deepcopy
@@ -53,6 +53,12 @@ class Element(pg.sprite.Sprite):  # this class is the father class of all releva
 
     def get_cor(self):
         return self.cor
+
+    def get_size(self):
+        return self.size
+
+    def get_pos(self):
+        return self.oriPos
 
     def reset(self):
         pass
@@ -473,13 +479,13 @@ class Level2(Level):
         j = 0
         minR=500
         for k in range(Level2.nNodeNum):
-            startX=int((j+0.1)*sep)  # leave some blank space
-            endX=int((j+0.9)*sep)
-            startY=int((i+0.1)*sep)
-            endY=int((i+0.9)*sep)
-            circlePos=[random.randint(int(startX+sep*0.2),int(endX-sep*0.2)),random.randint(int(startY+sep*0.2),int(endY-sep*0.2))]
+            start_x=int((j+0.1)*sep)  # leave some blank space
+            end_x=int((j+0.9)*sep)
+            start_y=int((i+0.1)*sep)
+            end_y=int((i+0.9)*sep)
+            circlePos=[random.randint(int(start_x+sep*0.2),int(end_x-sep*0.2)),random.randint(int(start_y+sep*0.2),int(end_y-sep*0.2))]
             # make sure the node is not too small
-            radius=min(circlePos[0]-startX,endX-circlePos[0],circlePos[1]-startY,endY-circlePos[1])
+            radius=min(circlePos[0]-start_x,end_x-circlePos[0],circlePos[1]-start_y,end_y-circlePos[1])
             minR=min(radius,minR)
             Level2.node_list.append(Node(circlePos,radius,k,DARKGREY))
             j+=1
@@ -674,11 +680,18 @@ class Level2(Level):
         self.display_solution()
         all_sprites_group.draw(screen)
 
+
 class Item(Element):
     def __init__(self,pos,size,color,cor,v,w):
         Element.__init__(self, pos, cor,size, color)
         self.volume=v
         self.weight=w
+
+    def get_weight(self):
+        return self.weight
+
+    def get_volume(self):
+        return self.volume
 
 
 class Bag(Element):
@@ -693,53 +706,81 @@ class Bag(Element):
     def set_volume(self,v):
         self.volume=v
 
+    def get_pos(self):
+        return self.oriPos
+
+    def get_volume(self):
+        return self.volume
+
+    def get_weight(self):
+        return self.weight
+
 class Level3(Level):
-    nBagNum=0
+    nBagNum = 0
+    item_list = []
+
+
     def __init__(self):
+        super().__init__()
         self.myPlayer=Bag([250,65],[100,70],RED,0,random.randint(10,100))
         all_sprites_group.empty()
         all_sprites_group.add(self.myPlayer)
 
-
     def initialise(self):
         Level3.nBagNum=random.randrange(4,30)
 
-        numX=int(math.sqrt(10/7*Level3.nBagNum))+1
-        numY=int(math.sqrt(7/10*Level3.nBagNum))+1
-        print(Level3.nBagNum,numX,numY)
-        sepX=500/numX
-        sepY=350/numY
-        i=0
-        j=0
+        num_x = int(math.sqrt(10/7*Level3.nBagNum))+1
+        num_y = int(math.sqrt(7/10*Level3.nBagNum))+1
+        print(Level3.nBagNum,num_x,num_y)
+        sep_x = 500/num_x
+        sep_y = 350/num_y
+        i = 0
+        j = 0
         for k in range(Level3.nBagNum):
-            startX=int((j+0.3)*sepX)
-            endX=int((j+0.7)*sepX)
-            startY = 150+int((i + 0.3) * sepY)
-            endY = 150 + int((i + 0.7) * sepY)
-            itemPos=[startX,startY]
-            size=[endX-startX,endY-startY]
-            v=random.randrange(5,50)
-            w=random.randrange(1,100)
-            all_sprites_group.add(Item(itemPos,size,BLACK,k,v,w))
-            j+=1
-            if j == numX:
-                i+=1
-                j%=numX
+            start_x = int((j+0.3)*sep_x)
+            end_x = int((j+0.7)*sep_x)
+            start_y = 150+int((i + 0.3) * sep_y)
+            end_y = 150 + int((i + 0.7) * sep_y)
+            item_pos = [start_x,start_y]
+            size = [end_x-start_x,end_y-start_y]
+            v = random.randrange(5,50)
+            w = random.randrange(1,100)
+            item = Item(item_pos,size,BLACK,k,v,w)
+            Level3.item_list.append(item)
+            all_sprites_group.add(item)
+            j += 1
+            if j == num_x:
+                i += 1
+                j %= num_x
 
+    def display_weight_and_volume(self):
+        p = self.myPlayer.get_pos()
+        s = self.myPlayer.get_size()
+        pos = [p[0], p[1]+s[1]]
+        font = pg.font.SysFont('Calibri', 25, True, False)
+        screen.blit(font.render("V   =   "+str(self.myPlayer.get_volume()), True, BLACK), pos)
+        screen.blit(font.render("W   =   "+str(self.myPlayer.get_weight()),True,BLACK), [pos[0],pos[1]+20])
+
+        for item in Level3.item_list:
+            p = item.get_pos()
+            s = item.get_size()
+            pos = [p[0], p[1]+s[1]]
+            font = pg.font.SysFont('Calibri', int(s[0]*0.7), True, False)
+            screen.blit(font.render("V=" + str(item.get_volume()), True, BLUE), pos)
+            screen.blit(font.render("W=" + str(item.get_weight()), True, BLUE), [pos[0], pos[1] + s[0]*0.5])
 
     def get_solution(self):  # find the optimum solution of a problem
         pass
 
     def display_information(self):  # display necessary information of the game, such as life, time steps
-      pass
-
+        pass
 
     def pre_update(self):  # pre_update will run outside the main program loop
         self.initialise()
         self.get_solution()
 
     def update(self):
-
+        self.display_weight_and_volume()
         all_sprites_group.draw(screen)
 
 
