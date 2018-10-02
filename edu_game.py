@@ -26,7 +26,9 @@ class Element(pg.sprite.Sprite):  # this class is the father class of all releva
     def __init__(self,pos,cor,size,color):
         super().__init__()
         self.image=pg.Surface(size)
+        self.centre = copy.deepcopy(pos)
         pos=[pos[0]-size[0]/2,pos[1]-size[1]/2]
+        self.pos = pos
         # pos parameter will be the top-left corner of the shape
         self.oriPos=copy.deepcopy(pos)
         self.rect=self.image.get_rect(topleft=pos)
@@ -38,7 +40,7 @@ class Element(pg.sprite.Sprite):  # this class is the father class of all releva
     def tracking_event(self,keys):
         pass
 
-    def move(self,endPos):
+    def move(self,end_pos=None):
         pass
 
     def set_pos(self,pos):
@@ -128,7 +130,7 @@ class Level(object):
     def get_solution(self): # find the optimum solution of a problem
         pass
     
-    def display_information(self):  # display necessary information of the game, such as life, time steps
+    def display_info(self):  # display necessary information of the game, such as life, time steps
         pass
     
     def restart(self):  # start the game again
@@ -253,7 +255,7 @@ class Level1(Level):
                 t=Level1.tile_list[i][j]
                 pg.draw.rect(screen,BLACK,t.get_rect(),t.get_color()*1)
 
-    def display_information(self):
+    def display_info(self):
         # game instruction
         gameInstruction = []
         gameInstruction.append(font.render("Game Instruction:", True, RED))
@@ -308,7 +310,7 @@ class Level1(Level):
         self.retryButton.update()
         self.restartButton.update()
         self.solutionButton.update()
-        self.display_information()
+        self.display_info()
 
 
 
@@ -609,7 +611,7 @@ class Level2(Level):
                     prev[n.num] = nd.num
                     pq.put(n)
 
-    def display_information(self):  # display necessary information of the game, such as life, time steps
+    def display_info(self):  # display necessary information of the game, such as life, time steps
         # game instruction
         gameInstruction = []
         gameInstruction.append(font.render("Game Instruction:", True, RED))
@@ -631,6 +633,8 @@ class Level2(Level):
 
         screen.blit(font.render("path length: " + str(self.myPlayer.get_time()), True, BLACK), [screenSize[1] + 10, 275 + 10])
         screen.blit(font.render("shortest path: " + str(self.solution), True, BLACK), [screenSize[1] + 10, 275 + 10 + 30])
+        for b in self.button_list:
+            b.update()
 
     def restart(self):  # start the game again
         if self.restartButton.isPressed():
@@ -669,10 +673,7 @@ class Level2(Level):
         self.draw_nodes()
         self.draw_edges()
         self.draw_visited_edges()
-        self.display_information()
-
-        for b in self.button_list:
-            b.update()
+        self.display_info()
         self.retry()
         self.restart()
         self.display_all_edges()
@@ -686,6 +687,7 @@ class Item(Element):
         Element.__init__(self, pos, cor,size, color)
         self.volume=v
         self.weight=w
+        self.selected = False
 
     def get_weight(self):
         return self.weight
@@ -693,11 +695,36 @@ class Item(Element):
     def get_volume(self):
         return self.volume
 
+    def is_mouse_over(self):
+        mousePos = pg.mouse.get_pos()
+        return self.centre[0]-self.size[0]/2 < mousePos[0] < self.centre[0] + self.size[0]/2 and \
+            self.centre[1]-self.size[1]/2 < mousePos[1] < self.centre[1] + self.size[1]/2
+
+    def is_mouse_pressed(self):
+        return self.is_mouse_over() and pg.mouse.get_pressed()[0] # mouse needs to be over a certain button
+
+    def is_clicked(self):
+        if self.is_mouse_pressed():
+            self.selected = not self.selected
+            if self.selected:
+                return 1  # the item is added to the bag
+            else:
+                return -1  # the item is taken from the bag
+        else:
+            return 0
+
+    def highlight_if_selected(self):
+        if self.selected:
+            pg.draw.rect(screen, GREEN, [self.pos, self.size], 6)
+
+    def deselect(self):
+        self.selected = False
 
 class Bag(Element):
     def __init__(self,pos,size,color,cor,v):
         Element.__init__(self,pos,cor,size,color)
         self.volume=v
+        self.ori_v = v
         self.weight=0
 
     def set_weight(self,w):
@@ -715,23 +742,32 @@ class Bag(Element):
     def get_weight(self):
         return self.weight
 
+    def reset(self):
+        self.weight = 0
+        self.volume = self.ori_v
+
+
 class Level3(Level):
     nBagNum = 0
     item_list = []
-
 
     def __init__(self):
         super().__init__()
         self.myPlayer=Bag([250,65],[100,70],RED,0,random.randint(10,100))
         all_sprites_group.empty()
-        all_sprites_group.add(self.myPlayer)
+        self.retryButton = Button([screenSize[1] + 10, 330], [85, 50], GREY, "retry")
+        self.button_list.append(self.retryButton)
+        self.restartButton = Button([screenSize[1] + 100, 330], [85, 50], GREY, "restart")
+        self.button_list.append(self.restartButton)
+        self.solutionButton = Button([screenSize[1] + 10, 400], [180, 60], GREY, "display solution")
+        self.button_list.append(self.solutionButton)
 
     def initialise(self):
         Level3.nBagNum=random.randrange(4,30)
-
+        self.myPlayer = Bag([250, 65], [100, 70], RED, 0, random.randint(10, 100))
+        all_sprites_group.add(self.myPlayer)
         num_x = int(math.sqrt(10/7*Level3.nBagNum))+1
         num_y = int(math.sqrt(7/10*Level3.nBagNum))+1
-        print(Level3.nBagNum,num_x,num_y)
         sep_x = 500/num_x
         sep_y = 350/num_y
         i = 0
@@ -764,16 +800,71 @@ class Level3(Level):
         for item in Level3.item_list:
             p = item.get_pos()
             s = item.get_size()
-            pos = [p[0], p[1]+s[1]]
+            pos = [p[0], p[1]+s[1]+5]
             font = pg.font.SysFont('Calibri', int(s[0]*0.7), True, False)
             screen.blit(font.render("V=" + str(item.get_volume()), True, BLUE), pos)
             screen.blit(font.render("W=" + str(item.get_weight()), True, BLUE), [pos[0], pos[1] + s[0]*0.5])
 
+    def item_highlight(self):
+        for item in Level3.item_list:
+            added = item.is_clicked()
+            item.highlight_if_selected()
+            if added == 1:
+                self.myPlayer.weight += item.get_weight()
+                self.myPlayer.volume -= item.get_volume()
+            elif added == -1:
+                self.myPlayer.weight -= item.get_weight()
+                self.myPlayer.volume += item.get_volume()
+
     def get_solution(self):  # find the optimum solution of a problem
         pass
 
-    def display_information(self):  # display necessary information of the game, such as life, time steps
+    def display_info(self):  # display necessary information of the game, such as life, time steps
+        # game instruction
+        gameInstruction = []
+        gameInstruction.append(font.render("Game Instruction:", True, RED))
+        gameInstruction.append(font.render("Select items that ", True, BLACK))
+        gameInstruction.append(font.render("will have maximum", True, BLACK))
+        gameInstruction.append(font.render("overall weight with a", True, BLACK))
+        gameInstruction.append(font.render("given volume", True, BLACK))
+        for i in range(len(gameInstruction)):
+            screen.blit(gameInstruction[i], [500 + 10, i * 30])
+
+        # game information
+        if self.myPlayer.get_weight() == self.solution:
+            screen.blit(font.render("You Win!", True, RED), [500 + 10, 200 + 10])
+            screen.blit(font.render("Congratulations", True, RED), [500 + 10, 200 + 10 + 30])
+
+        if self.myPlayer.get_volume() < 0:
+            screen.blit(font.render("Whoops! Click ", True, RED), [500 + 10, 200 + 10])
+            screen.blit(font.render("selected item again", True, RED), [500 + 10, 200 + 10 + 20])
+            screen.blit(font.render("to deselect it", True, RED), [500 + 10, 200 + 10 + 20 + 20])
+
+        screen.blit(font.render("Largest weight: " + str(self.solution), True, BLACK), [500 + 10, 280])
+
+        for b in self.button_list: # draw buttons
+            b.update()
+
+    def restart(self):  # start the game again
+        if self.restartButton.isPressed():
+            all_sprites_group.empty()
+            Level3.item_list = []
+            self.pre_update()
+            self.myPlayer.reset()
+
+    def retry(self):  # reset the game while keeping the map the same
+        if self.retryButton.isPressed():
+            for item in Level3.item_list:
+                item.deselect()
+            self.myPlayer.reset()
+
+    def display_solution(self):
         pass
+
+    def button_function(self):
+        self.retry()
+        self.restart()
+        self.display_solution()
 
     def pre_update(self):  # pre_update will run outside the main program loop
         self.initialise()
@@ -781,7 +872,11 @@ class Level3(Level):
 
     def update(self):
         self.display_weight_and_volume()
+        self.display_info()
+        self.item_highlight()
+        self.button_function()
         all_sprites_group.draw(screen)
+
 
 
 done = False
