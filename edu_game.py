@@ -700,22 +700,26 @@ class Item(Element):
         return self.centre[0]-self.size[0]/2 < mousePos[0] < self.centre[0] + self.size[0]/2 and \
             self.centre[1]-self.size[1]/2 < mousePos[1] < self.centre[1] + self.size[1]/2
 
-    def is_mouse_pressed(self):
-        return self.is_mouse_over() and pg.mouse.get_pressed()[0] # mouse needs to be over a certain button
+    def mouse_pressed(self): # detects if the item is left or right clicked
+        if self.is_mouse_over():
+            if pg.mouse.get_pressed()[0]:
+                return 1
+            elif pg.mouse.get_pressed()[2]:
+                return 2
+        return 0
 
     def is_clicked(self):
-        if self.is_mouse_pressed():
-            self.selected = not self.selected
-            if self.selected:
-                return 1  # the item is added to the bag
-            else:
-                return -1  # the item is taken from the bag
+        if self.mouse_pressed() == 1 and not self.selected:
+            self.selected = True
+            return 1
+        elif self.mouse_pressed() == 2 and self.selected:
+            self.selected = False
+            return -1
         else:
             return 0
 
-    def highlight_if_selected(self):
-        if self.selected:
-            pg.draw.rect(screen, GREEN, [self.pos, self.size], 6)
+    def highlight(self,color):
+        pg.draw.rect(screen, color, [self.pos, self.size], 4)
 
     def deselect(self):
         self.selected = False
@@ -748,7 +752,7 @@ class Bag(Element):
 
 
 class Level3(Level):
-    nBagNum = 0
+    n_item_num = 0
     item_list = []
 
     def __init__(self):
@@ -761,18 +765,19 @@ class Level3(Level):
         self.button_list.append(self.restartButton)
         self.solutionButton = Button([screenSize[1] + 10, 400], [180, 60], GREY, "display solution")
         self.button_list.append(self.solutionButton)
+        self.solution_list = []
 
     def initialise(self):
-        Level3.nBagNum=random.randrange(4,30)
+        Level3.n_item_num=random.randrange(4,30)
         self.myPlayer = Bag([250, 65], [100, 70], RED, 0, random.randint(10, 100))
         all_sprites_group.add(self.myPlayer)
-        num_x = int(math.sqrt(10/7*Level3.nBagNum))+1
-        num_y = int(math.sqrt(7/10*Level3.nBagNum))+1
+        num_x = int(math.sqrt(10/7*Level3.n_item_num))+1
+        num_y = int(math.sqrt(7/10*Level3.n_item_num))+1
         sep_x = 500/num_x
         sep_y = 350/num_y
         i = 0
         j = 0
-        for k in range(Level3.nBagNum):
+        for k in range(Level3.n_item_num):
             start_x = int((j+0.3)*sep_x)
             end_x = int((j+0.7)*sep_x)
             start_y = 150+int((i + 0.3) * sep_y)
@@ -808,7 +813,8 @@ class Level3(Level):
     def item_highlight(self):
         for item in Level3.item_list:
             added = item.is_clicked()
-            item.highlight_if_selected()
+            if item.selected:
+                item.highlight(GREEN)
             if added == 1:
                 self.myPlayer.weight += item.get_weight()
                 self.myPlayer.volume -= item.get_volume()
@@ -817,7 +823,26 @@ class Level3(Level):
                 self.myPlayer.volume += item.get_volume()
 
     def get_solution(self):  # find the optimum solution of a problem
-        pass
+        w = [0]*(Level3.n_item_num+1)
+        v = [0]*(Level3.n_item_num+1)
+        for i in range(1,Level3.n_item_num+1):
+            w[i] = Level3.item_list[i-1].get_weight() # i-1 is because index starts from 0 in the item_list
+            v[i] = Level3.item_list[i-1].get_volume()
+
+        dp = [[0]*(self.myPlayer.volume+1) for i in range(Level3.n_item_num+1)]
+        choices = [[[]] * (self.myPlayer.volume + 1) for i in range(Level3.n_item_num + 1)]
+        # store how items are selected for dp[i][j]
+        for i in range(1,Level3.n_item_num+1):
+            for j in range(1,self.myPlayer.get_volume()+1):
+                dp[i][j] = dp[i-1][j]
+                choices[i][j] = choices[i-1][j]
+                if j >= v[i] and dp[i-1][j-v[i]]+w[i] > dp[i-1][j]:
+                    dp[i][j] = dp[i-1][j-v[i]]+w[i]
+                    choices[i][j] = choices[i-1][j-v[i]] + [i]
+
+        self.solution = dp[Level3.n_item_num][self.myPlayer.get_volume()]
+        print(Level3.n_item_num,choices[Level3.n_item_num][self.myPlayer.get_volume()])
+        self. solution_list = choices[Level3.n_item_num][self.myPlayer.get_volume()]
 
     def display_info(self):  # display necessary information of the game, such as life, time steps
         # game instruction
@@ -836,7 +861,7 @@ class Level3(Level):
             screen.blit(font.render("Congratulations", True, RED), [500 + 10, 200 + 10 + 30])
 
         if self.myPlayer.get_volume() < 0:
-            screen.blit(font.render("Whoops! Click ", True, RED), [500 + 10, 200 + 10])
+            screen.blit(font.render("Whoops! Right lick ", True, RED), [500 + 10, 200 + 10])
             screen.blit(font.render("selected item again", True, RED), [500 + 10, 200 + 10 + 20])
             screen.blit(font.render("to deselect it", True, RED), [500 + 10, 200 + 10 + 20 + 20])
 
@@ -859,7 +884,9 @@ class Level3(Level):
             self.myPlayer.reset()
 
     def display_solution(self):
-        pass
+        if self.solutionButton.isPressed():
+            for s in self.solution_list:
+                Level3.item_list[s-1].highlight(RED)
 
     def button_function(self):
         self.retry()
