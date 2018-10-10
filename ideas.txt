@@ -46,7 +46,8 @@ every tile as an object
 display solutions
 level of increasing difficulty
 
-
+-1 problem
+refresh those that are too easy
 add more elements, e.g. enemies
 
 Candies POJ 3159
@@ -67,6 +68,35 @@ display solution
 
 
 
+01 knapsack problem POJ3624
+solve the display problem and finish the Bag, Item and Level3 class initialise
+display weights and volume of bags and items
+select and highlight (methods of the player)
+item selection and bag volume change
+display_info method
+dp
+display solution and check if the solution is correct
+right click to deselect
+
+picture of bags and items
 
 
 
+
+
+Title ✓
+Contents list ✓
+Description of investigation ✓
+Justification of investigation ✓
+Analysis,
+design
+development
+Evaluation ✓
+Bibliography ✓
+Pages numbered ✓
+
+things to do
+largest weight possible
+add current weight
+commit ideas
+change success criteria
