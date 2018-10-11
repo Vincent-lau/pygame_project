@@ -25,19 +25,18 @@ screen = pg.display.set_mode(screenSize)
 class Element(pg.sprite.Sprite):  # this class is the father class of all relevant classes in the game
     def __init__(self,pos,cor,size,color):
         super().__init__()
-        self.image=pg.Surface(size)
-        self.centre = copy.deepcopy(pos)
-        pos=[pos[0]-size[0]/2,pos[1]-size[1]/2]
-        self.pos = pos
-        # pos parameter will be the top-left corner of the shape
-        self.oriPos=copy.deepcopy(pos)
-        self.rect=self.image.get_rect(topleft=pos)
+        self.image = pg.Surface(size)
         self.image.fill(color)
-        self.oriCor=copy.deepcopy(cor) # any oriCor must use deepcopy
-        self.cor=cor    # cor[0] is the row number and cor[1] is the column number
-        self.size=size
+        self.centre = copy.deepcopy(pos)
+        self.pos = [pos[0]-size[0]/2,pos[1]-size[1]/2]
+        # pos parameter will be the top-left corner of the shape
+        self.ori_pos = copy.deepcopy(self.pos)
+        self.rect = self.image.get_rect(topleft=self.pos)
+        self.cor = cor  # cor[0] is the row number and cor[1] is the column number
+        self.ori_cor = copy.deepcopy(cor) # any ori_cor must use deepcopy
+        self.size = size
 
-    def tracking_event(self,keys):
+    def tracking_event(self,keys=None):
         pass
 
     def move(self,end_pos=None):
@@ -60,7 +59,7 @@ class Element(pg.sprite.Sprite):  # this class is the father class of all releva
         return self.size
 
     def get_pos(self):
-        return self.oriPos
+        return self.pos
 
     def reset(self):
         pass
@@ -121,7 +120,7 @@ class Button(object):
 
 class Level(object):
     def __init__(self): 
-        self.solution=-1
+        self.solution = -1
         self.button_list = []
 
     def initialise(self):
@@ -139,8 +138,19 @@ class Level(object):
     def retry(self):    # reset the game while keeping the map the same
         pass
 
-    def pre_update(self): # pre_update will run outside the main program loop
+    def display_solution(self):
         pass
+
+    def button_function(self):
+        self.restart()
+        self.retry()
+        self.display_solution()
+        for b in self.button_list:
+            b.update()
+
+    def pre_update(self): # pre_update will run outside the main program loop
+        self.initialise()
+        self.get_solution()
 
     def update(self):
         pass
@@ -155,8 +165,11 @@ class Level1(Level):
     def __init__(self):
         super().__init__()
         self.retryButton = Button([screenSize[1] + 10, 400 + 10], [70, 40], GREY, "retry")
+        self.button_list.append(self.retryButton)
         self.restartButton = Button([600 + 10, 400 + 10], [70, 40], GREY, "restart")
+        self.button_list.append(self.restartButton)
         self.solutionButton = Button([500 + 10, 450 + 10], [170, 30], GREY, "display solution")
+        self.button_list.append(self.solutionButton)
         self.myPlayer=Player1([0,0],[0,0],[0,0],BLACK)
         self.solution_list=[]   # records each step taken in the optimum solution
 
@@ -267,7 +280,7 @@ class Level1(Level):
             screen.blit(gameInstruction[i],[500+10,i*30])
 
         # game information
-        if self.myPlayer.get_cor()==Level1.princessCor and self.myPlayer.get_time()==self.solution:
+        if self.myPlayer.get_cor()==Level1.princessCor and self.myPlayer.get_step()==self.solution:
             screen.blit(font.render("You Win!", True, RED), [500 + 10, 200 + 10])
             screen.blit(font.render("Congratulations",True,RED),[500+10,200+10+30])
         elif self.myPlayer.get_cor()==Level1.princessCor:
@@ -275,7 +288,7 @@ class Level1(Level):
             screen.blit(font.render("Try to do it with", True, RED), [500 + 10, 200 + 10 + 30])
             screen.blit(font.render("fewer moves", True, RED), [500 + 10, 200 + 10 + 30*2])
 
-        screen.blit(font.render("steps taken: "+str(self.myPlayer.get_time()),True,BLACK),[500+10,300+10])
+        screen.blit(font.render("steps taken: " + str(self.myPlayer.get_step()), True, BLACK), [500 + 10, 300 + 10])
         screen.blit(font.render("steps required: " + str(self.solution), True, BLACK), [500 + 10, 300 + 10+30])
 
     def retry(self):    # reset the player position and the maze stays unchanged
@@ -287,10 +300,6 @@ class Level1(Level):
             all_sprites_group.empty()
             self.tile_list=[]
             self.pre_update()
-
-    def pre_update(self):
-        self.initialise()
-        self.get_solution()
 
     def display_solution(self):
         if self.solutionButton.isPressed():
@@ -304,14 +313,8 @@ class Level1(Level):
     def update(self):
         all_sprites_group.draw(screen)
         self.draw_tiles()
-        self.retry()
-        self.restart()
-        self.display_solution()
-        self.retryButton.update()
-        self.restartButton.update()
-        self.solutionButton.update()
+        self.button_function()
         self.display_info()
-
 
 
 class NPC(Element):
@@ -323,16 +326,16 @@ class Player1(Element):  # class Player1 is a friend of class Level1
 
     def __init__(self, pos, cor, size, color):
         Element.__init__(self, pos, cor, size, color)
-        self.oriTime=self.time=0
+        self.step = 0
 
     def tracking_event(self,keys):
-        if keys==pg.K_RIGHT:
-            self.move([self.cor[0],self.cor[1]+1])
-        elif keys==pg.K_LEFT:
+        if keys == pg.K_RIGHT:
+            self.move([self.cor[0], self.cor[1]+1])
+        elif keys == pg.K_LEFT:
             self.move([self.cor[0], self.cor[1] -1])
-        elif keys==pg.K_UP:
+        elif keys == pg.K_UP:
             self.move([self.cor[0]-1, self.cor[1]])
-        elif keys==pg.K_DOWN:
+        elif keys == pg.K_DOWN:
             self.move([self.cor[0]+1, self.cor[1]])
 
     def move(self,endCor):
@@ -348,16 +351,16 @@ class Player1(Element):  # class Player1 is a friend of class Level1
             self.rect.y=newY
             self.cor[0]=newR
             self.cor[1]=newC
-            self.time+=1
+            self.step+=1
 
-    def get_time(self):
-        return self.time
+    def get_step(self):
+        return self.step
 
     def reset(self):
-        self.cor=copy.deepcopy(self.oriCor) # any oriCor must be deeply copied
-        self.rect.x=self.oriPos[0]
-        self.rect.y=self.oriPos[1]
-        self.time=self.oriTime
+        self.cor=copy.deepcopy(self.ori_cor) # any ori_cor must be deeply copied
+        self.rect.x=self.ori_pos[0]
+        self.rect.y=self.ori_pos[1]
+        self.step = 0
 
 
 class Node(pg.sprite.Sprite):   # node is specific to level2
@@ -399,7 +402,7 @@ class Node(pg.sprite.Sprite):   # node is specific to level2
 class Player2(Element):
     def __init__(self,pos,cor,size,color):
         Element.__init__(self, pos, cor, size, color)
-        self.time=0
+        self.path = 0
 
     def tracking_event(self,button):
         pass
@@ -417,7 +420,7 @@ class Player2(Element):
 
         if flag:
             Level2.visited_node.append(node)
-            self.time+=node.weight
+            self.path+=node.weight
             self.cor = node.num
             p=node.get_centre()
             newX = p[0]-self.size[0]/2
@@ -437,17 +440,17 @@ class Player2(Element):
             self.rect.y = newY
             for n in Level2.graph[n1.num]:
                 if n2.num == n.num:
-                    self.time -= n.weight
+                    self.path -= n.weight
                     break
 
     def reset(self):
-        self.cor = copy.deepcopy(self.oriCor)  # any oriCor must be deeply copied
-        self.rect.x = self.oriPos[0]
-        self.rect.y = self.oriPos[1]
-        self.time=0
+        self.cor = copy.deepcopy(self.ori_cor)  # any ori_cor must be deeply copied
+        self.rect.x = self.ori_pos[0]
+        self.rect.y = self.ori_pos[1]
+        self.path=0
 
-    def get_time(self):
-        return self.time
+    def get_path(self):
+        return self.path
 
 
 class Level2(Level):
@@ -512,13 +515,6 @@ class Level2(Level):
                 node=Level2.node_list[n]
                 node.set_weight(w)
                 Level2.graph[i].append(node)
-        #
-        # print("node num",Level2.nNodeNum)
-        # for i in range(Level2.nNodeNum):
-        #     for j in range(len(Level2.graph[i])):
-        #         n=Level2.graph[i][j]
-        #         print("num:",n.num,"weight",n.weight,end="  ")
-        #     print()
 
         # initialise the player
         n1=Level2.node_list[random.randrange(0, Level2.nNodeNum)]
@@ -623,7 +619,7 @@ class Level2(Level):
             screen.blit(gameInstruction[i], [500 + 10, i * 30])
 
         # game information
-        if self.myPlayer.get_cor() == Level2.princessCor and self.myPlayer.get_time() == self.solution:
+        if self.myPlayer.get_cor() == Level2.princessCor and self.myPlayer.get_path() == self.solution:
             screen.blit(font.render("You Win!", True, RED), [screenSize[1] + 10, 200 + 10])
             screen.blit(font.render("Congratulations", True, RED), [screenSize[1] + 10, 200 + 10 + 30])
         elif self.myPlayer.get_cor() == Level2.princessCor:
@@ -631,10 +627,8 @@ class Level2(Level):
             screen.blit(font.render("Try to do it with", True, RED), [screenSize[1] + 10, 200 + 10 + 20])
             screen.blit(font.render("fewer moves", True, RED), [screenSize[1] + 10, 200 + 10 + 20 * 2])
 
-        screen.blit(font.render("path length: " + str(self.myPlayer.get_time()), True, BLACK), [screenSize[1] + 10, 275 + 10])
+        screen.blit(font.render("path length: " + str(self.myPlayer.get_path()), True, BLACK), [screenSize[1] + 10, 275 + 10])
         screen.blit(font.render("shortest path: " + str(self.solution), True, BLACK), [screenSize[1] + 10, 275 + 10 + 30])
-        for b in self.button_list:
-            b.update()
 
     def restart(self):  # start the game again
         if self.restartButton.isPressed():
@@ -665,20 +659,14 @@ class Level2(Level):
                 n2=Level2.node_list[self.solution_list[i+1]]
                 pg.draw.line(screen, RED, n1.get_centre(), n2.get_centre(), 3)
 
-    def pre_update(self):  # pre_update will run outside the main program loop
-        self.initialise()
-        self.get_solution()
-
     def update(self):
         self.draw_nodes()
         self.draw_edges()
         self.draw_visited_edges()
         self.display_info()
-        self.retry()
-        self.restart()
+        self.button_function()
         self.display_all_edges()
         self.back()
-        self.display_solution()
         all_sprites_group.draw(screen)
 
 
@@ -708,7 +696,7 @@ class Item(Element):
                 return 2
         return 0
 
-    def is_clicked(self):
+    def clicked(self):
         if self.mouse_pressed() == 1 and not self.selected:
             self.selected = True
             return 1
@@ -736,9 +724,6 @@ class Bag(Element):
 
     def set_volume(self,v):
         self.volume=v
-
-    def get_pos(self):
-        return self.oriPos
 
     def get_volume(self):
         return self.volume
@@ -812,7 +797,7 @@ class Level3(Level):
 
     def item_highlight(self):
         for item in Level3.item_list:
-            added = item.is_clicked()
+            added = item.clicked()
             if item.selected:
                 item.highlight(GREEN)
             if added == 1:
@@ -867,9 +852,6 @@ class Level3(Level):
 
         screen.blit(font.render("Largest weight: " + str(self.solution), True, BLACK), [500 + 10, 280])
 
-        for b in self.button_list: # draw buttons
-            b.update()
-
     def restart(self):  # start the game again
         if self.restartButton.isPressed():
             all_sprites_group.empty()
@@ -887,15 +869,6 @@ class Level3(Level):
         if self.solutionButton.isPressed():
             for s in self.solution_list:
                 Level3.item_list[s-1].highlight(RED)
-
-    def button_function(self):
-        self.retry()
-        self.restart()
-        self.display_solution()
-
-    def pre_update(self):  # pre_update will run outside the main program loop
-        self.initialise()
-        self.get_solution()
 
     def update(self):
         self.display_weight_and_volume()
