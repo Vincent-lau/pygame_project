@@ -8,13 +8,13 @@ import queue
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
-DARKGREY = (169,169,169)
-GREY = (96,96,96)
+DARKGREY = (169, 169, 169)
+GREY = (96, 96, 96)
 RED = (255, 0, 0)
-BLUE=(0,0,255)
-INF=2**31
+BLUE = (0, 0, 255)
+INF = 2**31
 
-all_sprites_group=pg.sprite.Group()
+all_sprites_group = pg.sprite.Group()
 pg.init()
 font = pg.font.SysFont('Calibri', 25, True, False)
 clock = pg.time.Clock()
@@ -23,7 +23,7 @@ screen = pg.display.set_mode(screenSize)
 
 
 class Element(pg.sprite.Sprite):  # this class is the father class of all relevant classes in the game
-    def __init__(self,pos,size,color, cor=0):
+    def __init__(self, pos, size, color):
         super().__init__()
         self.image = pg.Surface(size)
         self.image.fill(color)
@@ -32,28 +32,20 @@ class Element(pg.sprite.Sprite):  # this class is the father class of all releva
         # pos parameter will be the top-left corner of the shape
         self.ori_pos = copy.deepcopy(self.pos)
         self.rect = self.image.get_rect(topleft=self.pos)
-        self.cor = cor  # cor[0] is the row number and cor[1] is the column number
-        self.ori_cor = copy.deepcopy(cor) # any ori_cor must use deepcopy
         self.size = size
 
-    def tracking_event(self,keys=None):
+    def tracking_event(self, keys=None):
         pass
 
-    def move(self,end_pos=None):
+    def move(self, end_pos=None):
         pass
 
-    def set_pos(self,pos):
-        self.rect.x=pos[0]-self.size[0]/2
-        self.rect.y=pos[1]-self.size[1]/2
+    def set_pos(self, pos):
+        self.rect.x = pos[0]-self.size[0]/2
+        self.rect.y = pos[1]-self.size[1]/2
 
-    def set_cor(self,cor):
-        self.cor=cor
-
-    def set_size(self,size):
-        self.size=size
-
-    def get_cor(self):
-        return self.cor
+    def set_size(self, size):
+        self.size = size
 
     def get_size(self):
         return self.size
@@ -66,14 +58,14 @@ class Element(pg.sprite.Sprite):  # this class is the father class of all releva
 
 
 class Tile(pg.sprite.Sprite):   # tile is specific to level1
-    def __init__(self,pos,size):
+    def __init__(self, pos, size):
         super().__init__()
         self.image = pg.Surface(size)
-        self.rect=self.image.get_rect(topleft=pos)
-        self.color=1
-        self.centre=[pos[0]+size[0]/2,pos[1]+size[1]/2]
+        self.rect = self.image.get_rect(topleft=pos)
+        self.color = 1
+        self.centre = [pos[0]+size[0]/2,pos[1]+size[1]/2]
 
-    def set_color(self,color):
+    def set_color(self, color):
         # this is just a representation, color=1 means that the tile does not need to be filled,
         # color=0 means it should be filled
         self.color = color
@@ -89,7 +81,7 @@ class Tile(pg.sprite.Sprite):   # tile is specific to level1
 
 
 class Button(object):
-    def __init__(self,pos,size,color,word):
+    def __init__(self, pos, size, color, word):
         self.image = pg.Surface(size)
         self.rect = self.image.get_rect(topleft=pos)
         self.image.fill(color)
@@ -98,16 +90,17 @@ class Button(object):
 
     def is_over(self):
         mouse_pos = pg.mouse.get_pos()
-        return self.rect.x<mouse_pos[0]<self.rect.x+self.size[0] and self.rect.y<mouse_pos[1]<self.rect.y+self.size[1]
+        return self.rect.x < mouse_pos[0] < self.rect.x+self.size[0] and self.rect.y < mouse_pos[1] < \
+            self.rect.y+self.size[1]
 
     def is_pressed(self):
-        return self.is_over() and pg.mouse.get_pressed()[0] # mouse needs to be over a certain button
+        return self.is_over() and pg.mouse.get_pressed()[0]  # mouse needs to be over a certain button
 
     def display(self):  # display word and the button on the screen
-        screen.blit(self.image,self.rect)
-        screen.blit(font.render(self.word,True,WHITE),[self.rect.x+5,self.rect.y+10])
+        screen.blit(self.image, self.rect)
+        screen.blit(font.render(self.word, True, WHITE), [self.rect.x+5, self.rect.y+10])
 
-    def switch(self,color): # switch the color of the button
+    def switch(self, color):  # switch the color of the button
         self.image.fill(color)
 
     def update(self):
@@ -127,7 +120,7 @@ class Level(object):
     def initialise(self):
         pass
     
-    def get_solution(self): # find the optimum solution of a problem
+    def get_solution(self):  # find the optimum solution of a problem
         pass
     
     def display_info(self):  # display necessary information of the game, such as life, time steps
@@ -149,7 +142,7 @@ class Level(object):
         for b in self.button_list:
             b.update()
 
-    def pre_update(self): # pre_update will run outside the main program loop
+    def pre_update(self):  # pre_update will run outside the main program loop
         self.initialise()
         self.get_solution()
 
@@ -171,7 +164,7 @@ class Level1(Level):
         self.button_list.append(self.restart_button)
         self.solution_button = Button([500 + 10, 450 + 10], [170, 30], GREY, "display solution")
         self.button_list.append(self.solution_button)
-        self.my_player = Player1([0, 0], [0, 0], [0, 0], BLACK)
+        self.my_player = Player1([0, 0], [0, 0], BLACK, 0)
 
     def initialise(self):
         # 1=wall 2=player 3=princess
@@ -214,12 +207,12 @@ class Level1(Level):
                 elif Level1.maze[i][j] == 2:
                     size = [sideLength * 0.4,
                             sideLength * 0.4]  # the size of the player will make up two fifths of a tile
-                    self.my_player = Player1(t.get_centre(), [i, j], size, BLUE)  # player is centred
+                    self.my_player = Player1(t.get_centre(), size, BLUE, [i, j])  # player is centred
                     all_sprites_group.add(self.my_player)
 
                 elif Level1.maze[i][j] == 3:
                     size = [sideLength * 0.4, sideLength * 0.4]
-                    princess = NPC(t.get_centre(), [i,j],size,RED)
+                    princess = NPC(t.get_centre(), size, RED, [i,j])
                     all_sprites_group.add(princess)
                     Level1.princess_cor = [i, j]
 
@@ -319,14 +312,18 @@ class Level1(Level):
 
 
 class NPC(Element):
-    def __init__(self,pos,cor,size,color):
-        Element.__init__(self, pos, size, color, cor)
+    def __init__(self,pos, size, color, cor):
+        Element.__init__(self, pos, size, color)
+        self.cor = cor
+        self.ori_cor = copy.deepcopy(cor)  # any ori_cor must use deepcopy
 
 
 class Player1(Element):  # class Player1 is a friend of class Level1
 
-    def __init__(self, pos, cor, size, color):
-        Element.__init__(self, pos, size, color, cor)
+    def __init__(self, pos, size, color, cor):
+        Element.__init__(self, pos, size, color)
+        self.cor = cor
+        self.ori_cor = copy.deepcopy(cor)  # any ori_cor must use deepcopy
         self.step = 0
 
     def tracking_event(self,keys):
@@ -339,9 +336,9 @@ class Player1(Element):  # class Player1 is a friend of class Level1
         elif keys == pg.K_DOWN:
             self.move([self.cor[0]+1, self.cor[1]])
 
-    def move(self,endCor):
-        new_r=endCor[0]
-        new_c=endCor[1]
+    def move(self,end_cor):
+        new_r=end_cor[0]
+        new_c=end_cor[1]
         flag = (0 <= new_r < Level1.maze_num) and (0 <= new_c < Level1.maze_num) and (Level1.maze[new_r][new_c] != 1)
 
         if flag:
@@ -353,6 +350,12 @@ class Player1(Element):  # class Player1 is a friend of class Level1
             self.cor[0]=new_r
             self.cor[1]=new_c
             self.step+=1
+
+    def set_cor(self, cor):
+        self.cor = cor
+
+    def get_cor(self):
+        return self.cor
 
     def get_step(self):
         return self.step
@@ -401,8 +404,10 @@ class Node(pg.sprite.Sprite):   # node is specific to level2
 
 
 class Player2(Element):
-    def __init__(self,pos,cor,size,color):
-        Element.__init__(self, pos, size, color, cor)
+    def __init__(self,pos,size,color, cor):
+        Element.__init__(self, pos, size, color)
+        self.cor = cor
+        self.ori_cor = copy.deepcopy(cor)  # any ori_cor must use deepcopy
         self.path = 0
 
     def tracking_event(self,button):
@@ -443,6 +448,12 @@ class Player2(Element):
                 if n2.num == n.num:
                     self.path -= n.weight
                     break
+
+    def set_cor(self, cor):
+        self.cor = cor
+
+    def get_cor(self):
+        return self.cor
 
     def reset(self):
         self.cor = copy.deepcopy(self.ori_cor)  # any ori_cor must be deeply copied
@@ -879,7 +890,7 @@ class Level3(Level):
 
 done = False
 
-curLevel=Level3()
+curLevel = Level1()
 curLevel.pre_update()
 
 while not done:

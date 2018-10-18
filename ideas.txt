@@ -95,8 +95,9 @@ Evaluation ✓
 Bibliography ✓
 Pages numbered ✓
 
-things to do
+
+minor things to do
+level to puzzle
 largest weight possible
 add current weight
-commit ideas
-change success criteria
+
