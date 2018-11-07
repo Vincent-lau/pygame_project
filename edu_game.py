@@ -22,7 +22,7 @@ screenSize = (700, 500)
 screen = pg.display.set_mode(screenSize)
 
 
-class Element(pg.sprite.Sprite):  # this class is the father class of all relevant classes in the game
+class Element(pg.sprite.Sprite):  # this class is the parent class of all relevant classes in the game
     def __init__(self, pos, size, color):
         super().__init__()
         self.image = pg.Surface(size)
@@ -111,7 +111,7 @@ class Button(object):
         self.display()
 
 
-class Level(object):
+class Puzzle(object):
     def __init__(self): 
         self.solution = -1
         self.button_list = []
@@ -150,7 +150,45 @@ class Level(object):
         pass
 
 
-class Level1(Level):
+class PuzzleSelection(Puzzle):
+
+    def __init__(self):
+        super().__init__()
+        self.my_player = Element([0,0],[0,0],BLACK)
+        self.puzzle1 = Button([50, 50], [180, 50], GREY, "Save the princess")
+        self.button_list.append(self.puzzle1)
+        self.puzzle2 = Button([50, 200], [180, 50], GREY, "shortest path")
+        self.button_list.append(self.puzzle2)
+        self.puzzle3 = Button([50, 350], [180, 50], GREY, "knapsack problem")
+        self.button_list.append(self.puzzle3)
+
+    def display_info(self):
+        font1 = pg.font.SysFont('Calibri', 35, True, False)
+        screen.blit(font1.render("Welcome", True, BLUE),[280,10])
+        screen.blit(font.render("More challenges", True, BLACK),[360,350])
+        screen.blit(font.render("coming soon...",True,BLACK),[360,380])
+
+    def button_function(self):
+        global curPuzzle
+        if self.puzzle1.is_pressed():
+            curPuzzle = Puzzle1()
+            curPuzzle.pre_update()
+        elif self.puzzle2.is_pressed():
+            curPuzzle = Puzzle2()
+            curPuzzle.pre_update()
+        elif self.puzzle3.is_pressed():
+            curPuzzle = Puzzle3()
+            curPuzzle.pre_update()
+
+        for b in self.button_list:
+            b.update()
+
+    def update(self):
+        self.button_function()
+        self.display_info()
+
+
+class Puzzle1(Puzzle):
     maze = []
     princess_cor = [0, 0]
     maze_num = 0
@@ -169,54 +207,54 @@ class Level1(Level):
     def initialise(self):
         # 1=wall 2=player 3=princess
         all_sprites_group.empty()
-        Level1.maze_num = random.randrange(5, 30)
-        Level1.maze = [[0] * Level1.maze_num for i in range(Level1.maze_num)]
-        Level1.tile_list = [[Tile([0,0],[0,0])] * Level1.maze_num for i in range(Level1.maze_num)]
+        Puzzle1.maze_num = random.randrange(5, 30)
+        Puzzle1.maze = [[0] * Puzzle1.maze_num for i in range(Puzzle1.maze_num)]
+        Puzzle1.tile_list = [[Tile([0,0],[0,0])] * Puzzle1.maze_num for i in range(Puzzle1.maze_num)]
 
         nSpecialElement = random.randrange(0,
-                                           int(Level1.maze_num * Level1.maze_num * 0.5))
-        # randrange [a,b), 60% of the Level1.maze is wall
-        playerCor = random.randrange(0, Level1.maze_num * Level1.maze_num)
+                                           int(Puzzle1.maze_num * Puzzle1.maze_num * 0.5))
+        # randrange [a,b), 60% of the Puzzle1.maze is wall
+        playerCor = random.randrange(0, Puzzle1.maze_num * Puzzle1.maze_num)
 
-        Level1.maze[playerCor // Level1.maze_num][playerCor % Level1.maze_num] = 2
+        Puzzle1.maze[playerCor // Puzzle1.maze_num][playerCor % Puzzle1.maze_num] = 2
 
         while True:
-            princessCor = random.randrange(0, Level1.maze_num * Level1.maze_num)
+            princessCor = random.randrange(0, Puzzle1.maze_num * Puzzle1.maze_num)
             if princessCor != playerCor:
                 break
-        Level1.maze[princessCor // Level1.maze_num][princessCor % Level1.maze_num] = 3
+        Puzzle1.maze[princessCor // Puzzle1.maze_num][princessCor % Puzzle1.maze_num] = 3
         nSpecialElement -= 2
         for i in range(nSpecialElement):
 
             while True:
-                wallCor = random.randrange(0, Level1.maze_num * Level1.maze_num)
+                wallCor = random.randrange(0, Puzzle1.maze_num * Puzzle1.maze_num)
                 if wallCor != princessCor and wallCor != playerCor:
                     break
 
-            Level1.maze[wallCor // Level1.maze_num][wallCor % Level1.maze_num] = 1
+            Puzzle1.maze[wallCor // Puzzle1.maze_num][wallCor % Puzzle1.maze_num] = 1
 
-        sideLength = 500 / Level1.maze_num
-        for i in range(Level1.maze_num):
-            for j in range(Level1.maze_num):
+        sideLength = 500 / Puzzle1.maze_num
+        for i in range(Puzzle1.maze_num):
+            for j in range(Puzzle1.maze_num):
 
                 t = Tile((j * sideLength, i * sideLength), (sideLength, sideLength))
 
-                if Level1.maze[i][j] == 1:
+                if Puzzle1.maze[i][j] == 1:
                     t.set_color(0)
 
-                elif Level1.maze[i][j] == 2:
+                elif Puzzle1.maze[i][j] == 2:
                     size = [sideLength * 0.4,
                             sideLength * 0.4]  # the size of the player will make up two fifths of a tile
                     self.my_player = Player1(t.get_centre(), size, BLUE, [i, j])  # player is centred
                     all_sprites_group.add(self.my_player)
 
-                elif Level1.maze[i][j] == 3:
+                elif Puzzle1.maze[i][j] == 3:
                     size = [sideLength * 0.4, sideLength * 0.4]
                     princess = NPC(t.get_centre(), size, RED, [i,j])
                     all_sprites_group.add(princess)
-                    Level1.princess_cor = [i, j]
+                    Puzzle1.princess_cor = [i, j]
 
-                Level1.tile_list[i][j] = t
+                Puzzle1.tile_list[i][j] = t
 
     def get_solution(self):
         self.solution=-1
@@ -226,10 +264,10 @@ class Level1(Level):
         qTail=0
         # every element in q is a list of three integers s[0]: row num, s[1]:column number;
         # s[2]: number of steps, s[3]: father
-        visited = [[0] * Level1.maze_num for i in range(Level1.maze_num)]
+        visited = [[0] * Puzzle1.maze_num for i in range(Puzzle1.maze_num)]
         dir = [[0, 1, 0, -1], [1, 0, -1, 0]]
         startPos=self.my_player.get_cor()
-        endPos=Level1.princess_cor
+        endPos=Puzzle1.princess_cor
         q.append([startPos[0], startPos[1], 0, -1])
         qTail+=1
         while qHead!=qTail:
@@ -247,7 +285,7 @@ class Level1(Level):
             for i in range(4):
                 new_r = s[0] + dir[0][i]
                 new_c = s[1] + dir[1][i]
-                if new_r < 0 or new_r >= Level1.maze_num or new_c < 0 or new_c >= Level1.maze_num or Level1.maze[new_r][
+                if new_r < 0 or new_r >= Puzzle1.maze_num or new_c < 0 or new_c >= Puzzle1.maze_num or Puzzle1.maze[new_r][
                     new_c] == 1 or visited[new_r][new_c]:
                     continue
                 q.append([new_r, new_c, s[2] + 1,qHead])
@@ -257,9 +295,9 @@ class Level1(Level):
 
     @staticmethod
     def draw_tiles(): # draw all tiles onto the screen in the tile_list
-        for i in range(Level1.maze_num):
-            for j in range(Level1.maze_num):
-                t = Level1.tile_list[i][j]
+        for i in range(Puzzle1.maze_num):
+            for j in range(Puzzle1.maze_num):
+                t = Puzzle1.tile_list[i][j]
                 pg.draw.rect(screen,BLACK,t.get_rect(),t.get_color()*1)
 
     def display_info(self):
@@ -274,10 +312,10 @@ class Level1(Level):
             screen.blit(gameInstruction[i],[500+10,i*30])
 
         # game information
-        if self.my_player.get_cor()==Level1.princess_cor and self.my_player.get_step()==self.solution:
+        if self.my_player.get_cor()==Puzzle1.princess_cor and self.my_player.get_step()==self.solution:
             screen.blit(font.render("You Win!", True, RED), [500 + 10, 200 + 10])
             screen.blit(font.render("Congratulations",True,RED),[500+10,200+10+30])
-        elif self.my_player.get_cor()==Level1.princess_cor:
+        elif self.my_player.get_cor()==Puzzle1.princess_cor:
             screen.blit(font.render("Well done!", True, RED), [500 + 10, 200 + 10])
             screen.blit(font.render("Try to do it with", True, RED), [500 + 10, 200 + 10 + 30])
             screen.blit(font.render("fewer moves", True, RED), [500 + 10, 200 + 10 + 30*2])
@@ -300,13 +338,13 @@ class Level1(Level):
             for i in range(len(self.solution_list) - 1):
                 s1 = self.solution_list[i]
                 s2 = self.solution_list[i + 1]
-                t1 = Level1.tile_list[s1[0]][s1[1]]
-                t2 = Level1.tile_list[s2[0]][s2[1]]
+                t1 = Puzzle1.tile_list[s1[0]][s1[1]]
+                t2 = Puzzle1.tile_list[s2[0]][s2[1]]
                 pg.draw.line(screen, GREEN, t1.get_centre(), t2.get_centre(), 3)
 
     def update(self):
         all_sprites_group.draw(screen)
-        Level1.draw_tiles()
+        Puzzle1.draw_tiles()
         self.button_function()
         self.display_info()
 
@@ -318,7 +356,7 @@ class NPC(Element):
         self.ori_cor = copy.deepcopy(cor)  # any ori_cor must use deepcopy
 
 
-class Player1(Element):  # class Player1 is a friend of class Level1
+class Player1(Element):  # class Player1 is a friend of class Puzzle1
 
     def __init__(self, pos, size, color, cor):
         Element.__init__(self, pos, size, color)
@@ -339,10 +377,10 @@ class Player1(Element):  # class Player1 is a friend of class Level1
     def move(self,end_cor):
         new_r=end_cor[0]
         new_c=end_cor[1]
-        flag = (0 <= new_r < Level1.maze_num) and (0 <= new_c < Level1.maze_num) and (Level1.maze[new_r][new_c] != 1)
+        flag = (0 <= new_r < Puzzle1.maze_num) and (0 <= new_c < Puzzle1.maze_num) and (Puzzle1.maze[new_r][new_c] != 1)
 
         if flag:
-            newCentre = Level1.tile_list[new_r][new_c].get_centre()
+            newCentre = Puzzle1.tile_list[new_r][new_c].get_centre()
             newX = newCentre[0] - self.size[0] / 2
             newY = newCentre[1] - self.size[1] / 2
             self.rect.x=newX
@@ -413,19 +451,19 @@ class Player2(Element):
     def tracking_event(self,button):
         pass
         if button==1: # left key pressed
-            for n in Level2.node_list:
+            for n in Puzzle2.node_list:
                 if n.is_mouse_over():
                     self.move(n)
 
     def move(self,node):
         flag=False
-        for n in Level2.graph[self.cor]:
+        for n in Puzzle2.graph[self.cor]:
             if n.num==node.num:
                 flag=True
                 break
 
         if flag:
-            Level2.visited_node.append(node)
+            Puzzle2.visited_node.append(node)
             self.path+=node.weight
             self.cor = node.num
             p=node.get_centre()
@@ -435,16 +473,16 @@ class Player2(Element):
             self.rect.y = newY
 
     def move_back(self):
-        if len(Level2.visited_node) > 1:
-            n2 = Level2.visited_node.pop()
-            n1 = Level2.visited_node[-1]
+        if len(Puzzle2.visited_node) > 1:
+            n2 = Puzzle2.visited_node.pop()
+            n1 = Puzzle2.visited_node[-1]
             self.cor = n1.num
             p = n1.get_centre()
             newX = p[0] - self.size[0] / 2
             newY = p[1] - self.size[1] / 2
             self.rect.x = newX
             self.rect.y = newY
-            for n in Level2.graph[n1.num]:
+            for n in Puzzle2.graph[n1.num]:
                 if n2.num == n.num:
                     self.path -= n.weight
                     break
@@ -465,7 +503,7 @@ class Player2(Element):
         return self.path
 
 
-class Level2(Level):
+class Puzzle2(Puzzle):
     node_num=0
     graph=[]    # graph is adjacency list where each element is [nodeNum,weight]
     node_list=[]
@@ -474,7 +512,7 @@ class Level2(Level):
 
     def __init__(self):
         super().__init__()
-        self.my_player=Player2([0,0],0,[0,0],BLUE)
+        self.my_player=Player2([0,0] ,[0,0],BLUE, 0)
         self.retry_button=Button([screenSize[1] + 10, 350], [85, 40], GREY, "retry")
         self.button_list.append(self.retry_button)
         self.restart_button=Button([screenSize[1] + 100, 350], [85, 40], GREY, "restart")
@@ -487,14 +525,14 @@ class Level2(Level):
         self.button_list.append(self.solution_button)
 
     def initialise(self):
-        Level2.node_num=random.randrange(3, 30)
+        Puzzle2.node_num=random.randrange(3, 30)
         # generate the position of every node
-        num = int(math.sqrt(Level2.node_num)) + 1
+        num = int(math.sqrt(Puzzle2.node_num)) + 1
         sep=500/num
         i = 0
         j = 0
         minR=500
-        for k in range(Level2.node_num):
+        for k in range(Puzzle2.node_num):
             start_x=int((j+0.1)*sep)  # leave some blank space
             end_x=int((j+0.9)*sep)
             start_y=int((i+0.1)*sep)
@@ -503,70 +541,70 @@ class Level2(Level):
             # make sure the node is not too small
             radius=min(circlePos[0]-start_x,end_x-circlePos[0],circlePos[1]-start_y,end_y-circlePos[1])
             minR=min(radius,minR)
-            Level2.node_list.append(Node(circlePos,radius,k,DARKGREY))
+            Puzzle2.node_list.append(Node(circlePos,radius,k,DARKGREY))
             j+=1
             if j == num:
                 i += 1
                 j %= num
 
         # generate the graph in a adjacency list
-        Level2.graph = [[] for i in range(Level2.node_num)]
-        for i in range(Level2.node_num):
-            used = [0] * (Level2.node_num + 1)
+        Puzzle2.graph = [[] for i in range(Puzzle2.node_num)]
+        for i in range(Puzzle2.node_num):
+            used = [0] * (Puzzle2.node_num + 1)
             used[i]=1
-            outDegree = random.randrange(1, int(Level2.node_num * 0.8))
+            outDegree = random.randrange(1, int(Puzzle2.node_num * 0.8))
             j=0
             while j < outDegree:
-                n = random.randrange(0, Level2.node_num)
+                n = random.randrange(0, Puzzle2.node_num)
                 if used[n]:
                     continue
                 used[n]=1
                 j+=1
                 w = random.randrange(1, 100)
-                node=Level2.node_list[n]
+                node=Puzzle2.node_list[n]
                 node.set_weight(w)
-                Level2.graph[i].append(node)
+                Puzzle2.graph[i].append(node)
 
         # initialise the player
-        n1=Level2.node_list[random.randrange(0, Level2.node_num)]
-        self.my_player=Player2(n1.get_centre(),n1.num,[minR,minR],BLUE)
-        Level2.visited_node.append(n1)
+        n1=Puzzle2.node_list[random.randrange(0, Puzzle2.node_num)]
+        self.my_player=Player2(n1.get_centre(),[minR,minR],BLUE, n1.num)
+        Puzzle2.visited_node.append(n1)
         all_sprites_group.add(self.my_player)
         while True:
-            n2=Level2.node_list[random.randrange(0, Level2.node_num)]
+            n2=Puzzle2.node_list[random.randrange(0, Puzzle2.node_num)]
             if n2.num!=n1.num:
-                princess=NPC(n2.get_centre(),n2.num,[n2.get_size(),n2.get_size()],RED)
+                princess=NPC(n2.get_centre(),[n2.get_size(),n2.get_size()],RED, n2.num)
                 all_sprites_group.add(princess)
-                Level2.princess_cor=n2.num
+                Puzzle2.princess_cor=n2.num
                 break
 
     @staticmethod
     def draw_nodes():
-        for i in range(Level2.node_num):
-            n=Level2.node_list[i]
+        for i in range(Puzzle2.node_num):
+            n=Puzzle2.node_list[i]
             pg.draw.circle(screen,n.get_color(),n.get_centre(),n.get_size())
 
     @staticmethod
     def draw_visited_edges():
-        for i in range(len(Level2.visited_node)-1):
-            n1=Level2.visited_node[i]
-            n2=Level2.visited_node[i+1]
+        for i in range(len(Puzzle2.visited_node)-1):
+            n1=Puzzle2.visited_node[i]
+            n2=Puzzle2.visited_node[i+1]
             pg.draw.line(screen,GREEN,n1.get_centre(),n2.get_centre(),3)
 
     def draw_edges(self):
-        for n in Level2.node_list:
+        for n in Puzzle2.node_list:
             if n.is_mouse_over():
                 self.draw_edges_from_node(n)
 
-        n=Level2.node_list[self.my_player.get_cor()]
+        n=Puzzle2.node_list[self.my_player.get_cor()]
         self.draw_edges_from_node(n)
 
     @staticmethod
     def draw_all_edges():
-        for i in range(Level2.node_num):
-            for j in range(len(Level2.graph[i])):
-                n1=Level2.node_list[i]
-                n2=Level2.graph[i][j]
+        for i in range(Puzzle2.node_num):
+            for j in range(len(Puzzle2.graph[i])):
+                n1=Puzzle2.node_list[i]
+                n2=Puzzle2.graph[i][j]
                 pg.draw.aaline(screen,GREEN,n1.get_centre(),n2.get_centre())
                 # p1 = n1.get_centre()
                 # p2 = n2.get_centre()
@@ -575,9 +613,9 @@ class Level2(Level):
     @staticmethod
     def draw_edges_from_node(node):
         font = pg.font.SysFont('Calibri', 20, True, False)
-        for i in range(len(Level2.graph[node.num])):
+        for i in range(len(Puzzle2.graph[node.num])):
             n1=node
-            n2=Level2.graph[n1.num][i]
+            n2=Puzzle2.graph[n1.num][i]
             p1 = n1.get_centre()
             p2 = n2.get_centre()
             screen.blit(font.render(str(n2.weight),True,BLACK),[(p1[0]+p2[0])/2,(p1[1]+p2[1])/2])
@@ -585,11 +623,11 @@ class Level2(Level):
 
     def get_solution(self):  # find the optimum solution of a problem
         self.solution_list=[]
-        visited=[0]*Level2.node_num
-        dist=[INF]*Level2.node_num
-        prev=[0]*Level2.node_num
+        visited=[0]*Puzzle2.node_num
+        dist=[INF]*Puzzle2.node_num
+        prev=[0]*Puzzle2.node_num
         pq=queue.PriorityQueue()
-        nd=copy.deepcopy(Level2.node_list[self.my_player.get_cor()])
+        nd=copy.deepcopy(Puzzle2.node_list[self.my_player.get_cor()])
         nd.set_weight(0)
         pq.put(nd)
         prev[nd.num]=-1
@@ -598,7 +636,7 @@ class Level2(Level):
             nd=pq.get()
             if visited[nd.num]:
                 continue
-            if nd.num == Level2.princess_cor:
+            if nd.num == Puzzle2.princess_cor:
                 self.solution=dist[nd.num]
                 father=nd.num
                 while True:
@@ -609,7 +647,7 @@ class Level2(Level):
                 self.solution_list.reverse()
                 break
             visited[nd.num]=1
-            for n in Level2.graph[nd.num]:
+            for n in Puzzle2.graph[nd.num]:
                 if visited[n.num]:
                     continue
                 if dist[n.num] > dist[nd.num] + n.weight:
@@ -629,10 +667,10 @@ class Level2(Level):
             screen.blit(gameInstruction[i], [500 + 10, i * 30])
 
         # game information
-        if self.my_player.get_cor() == Level2.princess_cor and self.my_player.get_path() == self.solution:
+        if self.my_player.get_cor() == Puzzle2.princess_cor and self.my_player.get_path() == self.solution:
             screen.blit(font.render("You Win!", True, RED), [screenSize[1] + 10, 200 + 10])
             screen.blit(font.render("Congratulations", True, RED), [screenSize[1] + 10, 200 + 10 + 30])
-        elif self.my_player.get_cor() == Level2.princess_cor:
+        elif self.my_player.get_cor() == Puzzle2.princess_cor:
             screen.blit(font.render("Well done!", True, RED), [screenSize[1] + 10, 200 + 10])
             screen.blit(font.render("Try to do it with", True, RED), [screenSize[1] + 10, 200 + 10 + 20])
             screen.blit(font.render("fewer moves", True, RED), [screenSize[1] + 10, 200 + 10 + 20 * 2])
@@ -643,9 +681,9 @@ class Level2(Level):
     def restart(self):  # start the game again
         if self.restart_button.is_pressed():
             all_sprites_group.empty()
-            Level2.graph=[]
-            Level2.node_list=[]
-            Level2.visited_node=[]
+            Puzzle2.graph=[]
+            Puzzle2.node_list=[]
+            Puzzle2.visited_node=[]
             self.pre_update()
             self.my_player.reset()
 
@@ -655,18 +693,18 @@ class Level2(Level):
 
     def retry(self):  # reset the game while keeping the map the same
         if self.retry_button.is_pressed():
-            Level2.visited_node=[]
+            Puzzle2.visited_node=[]
             self.my_player.reset()
 
     def display_all_edges(self):
         if self.all_edges_button.is_pressed():
-            Level2.draw_all_edges()
+            Puzzle2.draw_all_edges()
 
     def display_solution(self):
         if self.solution_button.is_pressed():
             for i in range(len(self.solution_list)-1):
-                n1=Level2.node_list[self.solution_list[i]]
-                n2=Level2.node_list[self.solution_list[i+1]]
+                n1=Puzzle2.node_list[self.solution_list[i]]
+                n2=Puzzle2.node_list[self.solution_list[i+1]]
                 pg.draw.line(screen, RED, n1.get_centre(), n2.get_centre(), 3)
 
     def update(self):
@@ -747,7 +785,7 @@ class Bag(Element):
         self.volume = self.ori_v
 
 
-class Level3(Level):
+class Puzzle3(Puzzle):
     item_num = 0
     item_list = []
 
@@ -763,16 +801,16 @@ class Level3(Level):
         self.button_list.append(self.solution_button)
 
     def initialise(self):
-        Level3.item_num=random.randrange(4, 30)
+        Puzzle3.item_num=random.randrange(4, 30)
         self.my_player = Bag([250, 65], [100, 70], RED, random.randint(10, 100))
         all_sprites_group.add(self.my_player)
-        num_x = int(math.sqrt(10 / 7 * Level3.item_num)) + 1
-        num_y = int(math.sqrt(7 / 10 * Level3.item_num)) + 1
+        num_x = int(math.sqrt(10 / 7 * Puzzle3.item_num)) + 1
+        num_y = int(math.sqrt(7 / 10 * Puzzle3.item_num)) + 1
         sep_x = 500/num_x
         sep_y = 350/num_y
         i = 0
         j = 0
-        for k in range(Level3.item_num):
+        for k in range(Puzzle3.item_num):
             start_x = int((j+0.3)*sep_x)
             end_x = int((j+0.7)*sep_x)
             start_y = 150+int((i + 0.3) * sep_y)
@@ -782,7 +820,7 @@ class Level3(Level):
             v = random.randrange(5,50)
             w = random.randrange(1,100)
             item = Item(item_pos,size,BLACK,v,w)
-            Level3.item_list.append(item)
+            Puzzle3.item_list.append(item)
             all_sprites_group.add(item)
             j += 1
             if j == num_x:
@@ -797,7 +835,7 @@ class Level3(Level):
         screen.blit(font.render("V   =   "+str(self.my_player.get_volume()), True, BLACK), pos)
         screen.blit(font.render("W   =   "+str(self.my_player.get_weight()),True,BLACK), [pos[0],pos[1]+20])
 
-        for item in Level3.item_list:
+        for item in Puzzle3.item_list:
             p = item.get_pos()
             s = item.get_size()
             pos = [p[0], p[1]+s[1]+5]
@@ -806,7 +844,7 @@ class Level3(Level):
             screen.blit(font.render("W=" + str(item.get_weight()), True, BLUE), [pos[0], pos[1] + s[0]*0.5])
 
     def item_highlight(self):
-        for item in Level3.item_list:
+        for item in Puzzle3.item_list:
             added = item.clicked()
             if item.selected:
                 item.highlight(GREEN)
@@ -818,16 +856,16 @@ class Level3(Level):
                 self.my_player.volume += item.get_volume()
 
     def get_solution(self):  # find the optimum solution of a problem
-        w = [0]*(Level3.item_num + 1)
-        v = [0]*(Level3.item_num + 1)
-        for i in range(1, Level3.item_num + 1):
-            w[i] = Level3.item_list[i-1].get_weight() # i-1 is because index starts from 0 in the item_list
-            v[i] = Level3.item_list[i-1].get_volume()
+        w = [0]*(Puzzle3.item_num + 1)
+        v = [0]*(Puzzle3.item_num + 1)
+        for i in range(1, Puzzle3.item_num + 1):
+            w[i] = Puzzle3.item_list[i-1].get_weight() # i-1 is because index starts from 0 in the item_list
+            v[i] = Puzzle3.item_list[i-1].get_volume()
 
-        dp = [[0] * (self.my_player.volume+1) for i in range(Level3.item_num + 1)]
-        choices = [[[]] * (self.my_player.volume + 1) for i in range(Level3.item_num + 1)]
+        dp = [[0] * (self.my_player.volume+1) for i in range(Puzzle3.item_num + 1)]
+        choices = [[[]] * (self.my_player.volume + 1) for i in range(Puzzle3.item_num + 1)]
         # store how items are selected for dp[i][j]
-        for i in range(1, Level3.item_num + 1):
+        for i in range(1, Puzzle3.item_num + 1):
             for j in range(1,self.my_player.get_volume()+1):
                 dp[i][j] = dp[i-1][j]
                 choices[i][j] = choices[i-1][j]
@@ -835,8 +873,8 @@ class Level3(Level):
                     dp[i][j] = dp[i-1][j-v[i]]+w[i]
                     choices[i][j] = choices[i-1][j-v[i]] + [i]
 
-        self.solution = dp[Level3.item_num][self.my_player.get_volume()]
-        self. solution_list = choices[Level3.item_num][self.my_player.get_volume()]
+        self.solution = dp[Puzzle3.item_num][self.my_player.get_volume()]
+        self. solution_list = choices[Puzzle3.item_num][self.my_player.get_volume()]
 
     def display_info(self):  # display necessary information of the game, such as life, time steps
         # game instruction
@@ -864,20 +902,20 @@ class Level3(Level):
     def restart(self):  # start the game again
         if self.restart_button.is_pressed():
             all_sprites_group.empty()
-            Level3.item_list = []
+            Puzzle3.item_list = []
             self.pre_update()
             self.my_player.reset()
 
     def retry(self):  # reset the game while keeping the map the same
         if self.retry_button.is_pressed():
-            for item in Level3.item_list:
+            for item in Puzzle3.item_list:
                 item.deselect()
             self.my_player.reset()
 
     def display_solution(self):
         if self.solution_button.is_pressed():
             for s in self.solution_list:
-                Level3.item_list[s-1].highlight(RED)
+                Puzzle3.item_list[s-1].highlight(RED)
 
     def update(self):
         self.display_weight_and_volume()
@@ -890,20 +928,20 @@ class Level3(Level):
 
 done = False
 
-curLevel = Level1()
-curLevel.pre_update()
+curPuzzle = PuzzleSelection()
+curPuzzle.pre_update()
 
 while not done:
     for event in pg.event.get():
         if event.type == pg.QUIT:
             done=True
         elif event.type == pg.KEYDOWN:
-            curLevel.my_player.tracking_event(event.key)
+            curPuzzle.my_player.tracking_event(event.key)
         elif event.type==pg.MOUSEBUTTONDOWN:
-            curLevel.my_player.tracking_event(event.button)
+            curPuzzle.my_player.tracking_event(event.button)
 
     screen.fill(WHITE)
-    curLevel.update()   # this line must be after the group draw code
+    curPuzzle.update()   # this line must be after the group draw code
 
     pg.display.flip()
     clock.tick(60)
