@@ -34,10 +34,10 @@ class Element(pg.sprite.Sprite):  # this class is the parent class of all releva
         self.rect = self.image.get_rect(topleft=self.pos)
         self.size = size
 
-    def tracking_event(self, keys=None):
+    def tracking_event(self, keys):
         pass
 
-    def move(self, end_pos=None):
+    def move(self, end_pos):
         pass
 
     def set_pos(self, pos):
@@ -88,12 +88,12 @@ class Button(object):
         self.word = word
         self.size = size
 
-    def is_over(self):
+    def is_over(self):  # returns whether the mouse is over the button, not necessarily a click
         mouse_pos = pg.mouse.get_pos()
         return self.rect.x < mouse_pos[0] < self.rect.x+self.size[0] and self.rect.y < mouse_pos[1] < \
             self.rect.y+self.size[1]
 
-    def is_pressed(self):
+    def is_pressed(self):  # returns if the button is pressed
         return self.is_over() and pg.mouse.get_pressed()[0]  # mouse needs to be over a certain button
 
     def display(self):  # display word and the button on the screen
@@ -112,20 +112,20 @@ class Button(object):
 
 
 class Puzzle(object):
-    def __init__(self): 
+    def __init__(self):
         self.solution = -1
         self.button_list = []
         self.solution_list = []
 
     def initialise(self):
         pass
-    
+
     def get_solution(self):  # find the optimum solution of a problem
         pass
-    
+
     def display_info(self):  # display necessary information of the game, such as life, time steps
         pass
-    
+
     def restart(self):  # start the game again
         pass
 
@@ -154,12 +154,12 @@ class PuzzleSelection(Puzzle):
 
     def __init__(self):
         super().__init__()
-        self.my_player = Element([0,0],[0,0],BLACK)
+        self.my_player = Element([0, 0], [0, 0], BLACK)
         self.puzzle1 = Button([50, 50], [180, 50], GREY, "Save the princess")
         self.button_list.append(self.puzzle1)
-        self.puzzle2 = Button([50, 200], [180, 50], GREY, "shortest path")
+        self.puzzle2 = Button([50, 200], [180, 50], GREY, "Shortest path")
         self.button_list.append(self.puzzle2)
-        self.puzzle3 = Button([50, 350], [180, 50], GREY, "knapsack problem")
+        self.puzzle3 = Button([50, 350], [180, 50], GREY, "Knapsack problem")
         self.button_list.append(self.puzzle3)
 
     def display_info(self):
@@ -207,33 +207,33 @@ class Puzzle1(Puzzle):
     def initialise(self):
         # 1=wall 2=player 3=princess
         all_sprites_group.empty()
-        Puzzle1.maze_num = random.randrange(5, 30)
+        Puzzle1.maze_num = random.randrange(5, 30)  # number of maze are randomly generated
         Puzzle1.maze = [[0] * Puzzle1.maze_num for i in range(Puzzle1.maze_num)]
         Puzzle1.tile_list = [[Tile([0,0],[0,0])] * Puzzle1.maze_num for i in range(Puzzle1.maze_num)]
 
         nSpecialElement = random.randrange(0,
                                            int(Puzzle1.maze_num * Puzzle1.maze_num * 0.5))
-        # randrange [a,b), 60% of the Puzzle1.maze is wall
-        playerCor = random.randrange(0, Puzzle1.maze_num * Puzzle1.maze_num)
+        # randrange [a,b), 50% of the Puzzle1.maze is wall
+        player_cor = random.randrange(0, Puzzle1.maze_num * Puzzle1.maze_num)
 
-        Puzzle1.maze[playerCor // Puzzle1.maze_num][playerCor % Puzzle1.maze_num] = 2
-
+        #  assign different numbers to the player, princess and tiles
+        Puzzle1.maze[player_cor // Puzzle1.maze_num][player_cor % Puzzle1.maze_num] = 2
         while True:
-            princessCor = random.randrange(0, Puzzle1.maze_num * Puzzle1.maze_num)
-            if princessCor != playerCor:
+            princess_cor = random.randrange(0, Puzzle1.maze_num * Puzzle1.maze_num)
+            if princess_cor != player_cor:
                 break
-        Puzzle1.maze[princessCor // Puzzle1.maze_num][princessCor % Puzzle1.maze_num] = 3
+        Puzzle1.maze[princess_cor // Puzzle1.maze_num][princess_cor % Puzzle1.maze_num] = 3
         nSpecialElement -= 2
         for i in range(nSpecialElement):
-
             while True:
                 wallCor = random.randrange(0, Puzzle1.maze_num * Puzzle1.maze_num)
-                if wallCor != princessCor and wallCor != playerCor:
+                if wallCor != princess_cor and wallCor != player_cor:
                     break
 
             Puzzle1.maze[wallCor // Puzzle1.maze_num][wallCor % Puzzle1.maze_num] = 1
 
         sideLength = 500 / Puzzle1.maze_num
+        # iterate through the maze and generate revelant objects
         for i in range(Puzzle1.maze_num):
             for j in range(Puzzle1.maze_num):
 
@@ -257,7 +257,7 @@ class Puzzle1(Puzzle):
                 Puzzle1.tile_list[i][j] = t
 
     def get_solution(self):
-        self.solution=-1
+        self.solution = -1
         self.solution_list = []
         q = []
         qHead=0
@@ -266,10 +266,11 @@ class Puzzle1(Puzzle):
         # s[2]: number of steps, s[3]: father
         visited = [[0] * Puzzle1.maze_num for i in range(Puzzle1.maze_num)]
         dir = [[0, 1, 0, -1], [1, 0, -1, 0]]
-        startPos=self.my_player.get_cor()
-        endPos=Puzzle1.princess_cor
+        startPos = self.my_player.get_cor()
+        endPos = Puzzle1.princess_cor
         q.append([startPos[0], startPos[1], 0, -1])
-        qTail+=1
+        qTail += 1
+        # bfs implementation
         while qHead!=qTail:
             s = q[qHead]
             if [s[0], s[1]] == endPos:
@@ -378,16 +379,18 @@ class Player1(Element):  # class Player1 is a friend of class Puzzle1
         new_r=end_cor[0]
         new_c=end_cor[1]
         flag = (0 <= new_r < Puzzle1.maze_num) and (0 <= new_c < Puzzle1.maze_num) and (Puzzle1.maze[new_r][new_c] != 1)
-
+        # check if the player reaches the boundary and if the block is reachable
         if flag:
+            # find the new centre of the player
             newCentre = Puzzle1.tile_list[new_r][new_c].get_centre()
             newX = newCentre[0] - self.size[0] / 2
             newY = newCentre[1] - self.size[1] / 2
-            self.rect.x=newX
-            self.rect.y=newY
-            self.cor[0]=new_r
-            self.cor[1]=new_c
-            self.step+=1
+            # change the attributes of the player
+            self.rect.x = newX
+            self.rect.y = newY
+            self.cor[0] = new_r
+            self.cor[1] = new_c
+            self.step += 1
 
     def set_cor(self, cor):
         self.cor = cor
@@ -591,7 +594,7 @@ class Puzzle2(Puzzle):
             n2=Puzzle2.visited_node[i+1]
             pg.draw.line(screen,GREEN,n1.get_centre(),n2.get_centre(),3)
 
-    def draw_edges(self):
+    def draw_edges(self):  # draw the edge if the player is on the node or if the mouse is over
         for n in Puzzle2.node_list:
             if n.is_mouse_over():
                 self.draw_edges_from_node(n)
@@ -611,7 +614,7 @@ class Puzzle2(Puzzle):
                 # screen.blit(font.render(str(n2.weight), True, BLACK), [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2])
 
     @staticmethod
-    def draw_edges_from_node(node):
+    def draw_edges_from_node(node):  # draw the edge from a node
         font = pg.font.SysFont('Calibri', 20, True, False)
         for i in range(len(Puzzle2.graph[node.num])):
             n1=node
@@ -619,6 +622,7 @@ class Puzzle2(Puzzle):
             p1 = n1.get_centre()
             p2 = n2.get_centre()
             screen.blit(font.render(str(n2.weight),True,BLACK),[(p1[0]+p2[0])/2,(p1[1]+p2[1])/2])
+            # the weight is at the middle point of a edge
             pg.draw.aaline(screen, GREEN, p1,p2)
 
     def get_solution(self):  # find the optimum solution of a problem
@@ -937,7 +941,7 @@ while not done:
             done=True
         elif event.type == pg.KEYDOWN:
             curPuzzle.my_player.tracking_event(event.key)
-        elif event.type==pg.MOUSEBUTTONDOWN:
+        elif event.type == pg.MOUSEBUTTONDOWN:
             curPuzzle.my_player.tracking_event(event.button)
 
     screen.fill(WHITE)

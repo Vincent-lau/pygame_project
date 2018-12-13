@@ -80,7 +80,10 @@ right click to deselect
 
 picture of bags and items
 
-
+level selection design
+find out positions of buttons and words
+button instantiation
+words displayed on the screen
 
 
 
