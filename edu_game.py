@@ -4,7 +4,7 @@ import copy
 import math
 import queue
 
-
+# tuples declared for colours
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
@@ -37,7 +37,7 @@ class Element(pg.sprite.Sprite):  # this class is the parent class of all releva
     def tracking_event(self, keys):
         pass
 
-    def move(self, end_pos):
+    def move(self, end_pos):  # some elements may be able to move
         pass
 
     def set_pos(self, pos):
@@ -80,7 +80,7 @@ class Tile(pg.sprite.Sprite):   # tile is specific to level1
         return self.rect
 
 
-class Button(object):
+class Button(object):  # button class, blueprint for all buttons
     def __init__(self, pos, size, color, word):
         self.image = pg.Surface(size)
         self.rect = self.image.get_rect(topleft=pos)
@@ -103,7 +103,7 @@ class Button(object):
     def switch(self, color):  # switch the color of the button
         self.image.fill(color)
 
-    def update(self):
+    def update(self):  # monitors if the button has been clicked
         if self.is_over():
             self.switch(DARKGREY)
         else:
@@ -111,7 +111,7 @@ class Button(object):
         self.display()
 
 
-class Puzzle(object):
+class Puzzle(object):  # super class of all puzzles, like a virtual class
     def __init__(self):
         self.solution = -1
         self.button_list = []
@@ -132,10 +132,10 @@ class Puzzle(object):
     def retry(self):    # reset the game while keeping the map the same
         pass
 
-    def display_solution(self):
+    def display_solution(self):  # display game information and instructions
         pass
 
-    def button_function(self):
+    def button_function(self):  # make sure buttons are updated
         self.restart()
         self.retry()
         self.display_solution()
@@ -150,7 +150,7 @@ class Puzzle(object):
         pass
 
 
-class PuzzleSelection(Puzzle):
+class PuzzleSelection(Puzzle):  # the puzzle selection interface
 
     def __init__(self):
         super().__init__()
@@ -162,7 +162,7 @@ class PuzzleSelection(Puzzle):
         self.puzzle3 = Button([50, 350], [180, 50], GREY, "Knapsack problem")
         self.button_list.append(self.puzzle3)
 
-    def display_info(self):
+    def display_info(self):  # buttons and letters are displayed
         font1 = pg.font.SysFont('Calibri', 35, True, False)
         screen.blit(font1.render("Welcome", True, BLUE),[280,10])
         screen.blit(font.render("More challenges", True, BLACK),[360,350])
@@ -188,7 +188,7 @@ class PuzzleSelection(Puzzle):
         self.display_info()
 
 
-class Puzzle1(Puzzle):
+class Puzzle1(Puzzle):  # the save the princess puzzle
     maze = []
     princess_cor = [0, 0]
     maze_num = 0
@@ -350,7 +350,7 @@ class Puzzle1(Puzzle):
         self.display_info()
 
 
-class NPC(Element):
+class NPC(Element):  # mainly the princess class
     def __init__(self,pos, size, color, cor):
         Element.__init__(self, pos, size, color)
         self.cor = cor
