@@ -506,7 +506,7 @@ class Player2(Element):
         return self.path
 
 
-class Puzzle2(Puzzle):
+class Puzzle2(Puzzle):  # the shortest path puzzle
     node_num=0
     graph=[]    # graph is adjacency list where each element is [nodeNum,weight]
     node_list=[]
@@ -691,7 +691,7 @@ class Puzzle2(Puzzle):
             self.pre_update()
             self.my_player.reset()
 
-    def back(self):
+    def back(self):  # funciton of the back button
         if self.back_button.is_pressed():
             self.my_player.move_back()
 
@@ -722,7 +722,7 @@ class Puzzle2(Puzzle):
         all_sprites_group.draw(screen)
 
 
-class Item(Element):
+class Item(Element):  # items in the third puzzle
     def __init__(self,pos,size,color,v,w):
         Element.__init__(self, pos, size, color)
         self.volume=v
@@ -765,7 +765,7 @@ class Item(Element):
         self.selected = False
 
 
-class Bag(Element):
+class Bag(Element):  # the bag in the third puzzle
     def __init__(self, pos, size, color, v):
         Element.__init__(self, pos, size, color)
         self.volume=v
@@ -789,7 +789,7 @@ class Bag(Element):
         self.volume = self.ori_v
 
 
-class Puzzle3(Puzzle):
+class Puzzle3(Puzzle):  # knapsack problem
     item_num = 0
     item_list = []
 
@@ -847,7 +847,7 @@ class Puzzle3(Puzzle):
             screen.blit(font.render("V=" + str(item.get_volume()), True, BLUE), pos)
             screen.blit(font.render("W=" + str(item.get_weight()), True, BLUE), [pos[0], pos[1] + s[0]*0.5])
 
-    def item_highlight(self):
+    def item_highlight(self):  # show item that are selected
         for item in Puzzle3.item_list:
             added = item.clicked()
             if item.selected:
