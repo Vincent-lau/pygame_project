@@ -308,14 +308,14 @@ class Puzzle1(Puzzle):  # the save the princess puzzle
 
     def display_info(self):
         # game instruction
-        gameInstruction = []
-        gameInstruction.append(font.render("Game Instruction:", True, RED))
-        gameInstruction.append(font.render("Move the player to", True, BLACK))
-        gameInstruction.append(font.render("meet the princess", True, BLACK))
-        gameInstruction.append(font.render("in minimum number", True, BLACK))
-        gameInstruction.append(font.render("of moves", True, BLACK))
-        for i in range(len(gameInstruction)):
-            screen.blit(gameInstruction[i],[500+10,i*30])
+        game_instruction = []
+        game_instruction.append(font.render("Game Instruction:", True, RED))
+        game_instruction.append(font.render("Move the player to", True, BLACK))
+        game_instruction.append(font.render("meet the princess", True, BLACK))
+        game_instruction.append(font.render("in minimum number", True, BLACK))
+        game_instruction.append(font.render("of moves", True, BLACK))
+        for i in range(len(game_instruction)):
+            screen.blit(game_instruction[i],[500+10,i*30])
 
         # game information
         if self.my_player.get_cor()==Puzzle1.princess_cor and self.my_player.get_step()==self.solution:
@@ -380,7 +380,7 @@ class Player1(Element):  # class Player1 is a friend of class Puzzle1
         elif keys == pg.K_DOWN:
             self.move([self.cor[0]+1, self.cor[1]])
 
-    def move(self,end_cor):
+    def move(self, end_cor):
         new_r=end_cor[0]
         new_c=end_cor[1]
         flag = (0 <= new_r < Puzzle1.maze_num) and (0 <= new_c < Puzzle1.maze_num) and (Puzzle1.maze[new_r][new_c] != 1)
@@ -816,12 +816,17 @@ class Puzzle3(Puzzle):  # knapsack problem
         Puzzle3.item_num=random.randrange(4, 30)
         self.my_player = Bag([250, 65], [100, 70], RED, random.randint(10, 100))
         all_sprites_group.add(self.my_player)
+
+        # calculate the number of items per row and column
         num_x = int(math.sqrt(10 / 7 * Puzzle3.item_num)) + 1
         num_y = int(math.sqrt(7 / 10 * Puzzle3.item_num)) + 1
         sep_x = 500/num_x
         sep_y = 350/num_y
+
         i = 0
         j = 0
+
+        # give each item its position, size, color, volume, weight, etc
         for k in range(Puzzle3.item_num):
             start_x = int((j+0.3)*sep_x)
             end_x = int((j+0.7)*sep_x)
@@ -840,6 +845,7 @@ class Puzzle3(Puzzle):  # knapsack problem
                 j %= num_x
 
     def display_weight_and_volume(self):
+        # the bag
         p = self.my_player.get_pos()
         s = self.my_player.get_size()
         pos = [p[0], p[1]+s[1]]
@@ -847,6 +853,7 @@ class Puzzle3(Puzzle):  # knapsack problem
         screen.blit(font.render("V   =   "+str(self.my_player.get_volume()), True, BLACK), pos)
         screen.blit(font.render("W   =   "+str(self.my_player.get_weight()),True,BLACK), [pos[0],pos[1]+20])
 
+        # items
         for item in Puzzle3.item_list:
             p = item.get_pos()
             s = item.get_size()
@@ -855,11 +862,13 @@ class Puzzle3(Puzzle):  # knapsack problem
             screen.blit(font.render("V=" + str(item.get_volume()), True, BLUE), pos)
             screen.blit(font.render("W=" + str(item.get_weight()), True, BLUE), [pos[0], pos[1] + s[0]*0.5])
 
-    def item_highlight(self):  # show item that are selected
+    def item_highlight(self):  # show items that are selected
         for item in Puzzle3.item_list:
             added = item.clicked()
             if item.selected:
                 item.highlight(GREEN)
+
+            # update the value of the bag
             if added == 1:
                 self.my_player.weight += item.get_weight()
                 self.my_player.volume -= item.get_volume()
@@ -867,14 +876,17 @@ class Puzzle3(Puzzle):  # knapsack problem
                 self.my_player.weight -= item.get_weight()
                 self.my_player.volume += item.get_volume()
 
-    def get_solution(self):  # find the optimum solution of a problem
+    def get_solution(self):  # dynamic porgramming used to optimum solution of a problem
         w = [0]*(Puzzle3.item_num + 1)
         v = [0]*(Puzzle3.item_num + 1)
+
+        # get the weight and volume of all items and store them in the arrays
         for i in range(1, Puzzle3.item_num + 1):
             w[i] = Puzzle3.item_list[i-1].get_weight() # i-1 is because index starts from 0 in the item_list
             v[i] = Puzzle3.item_list[i-1].get_volume()
 
         dp = [[0] * (self.my_player.volume+1) for i in range(Puzzle3.item_num + 1)]
+        # array used to store dp results
         choices = [[[]] * (self.my_player.volume + 1) for i in range(Puzzle3.item_num + 1)]
         # store how items are selected for dp[i][j]
         for i in range(1, Puzzle3.item_num + 1):
@@ -890,14 +902,14 @@ class Puzzle3(Puzzle):  # knapsack problem
 
     def display_info(self):  # display necessary information of the game, such as life, time steps
         # game instruction
-        gameInstruction = []
-        gameInstruction.append(font.render("Game Instruction:", True, RED))
-        gameInstruction.append(font.render("Select items that ", True, BLACK))
-        gameInstruction.append(font.render("will have maximum", True, BLACK))
-        gameInstruction.append(font.render("overall weight with a", True, BLACK))
-        gameInstruction.append(font.render("given volume", True, BLACK))
-        for i in range(len(gameInstruction)):
-            screen.blit(gameInstruction[i], [500 + 10, i * 30])
+        game_instruction = []
+        game_instruction.append(font.render("Game Instruction:", True, RED))
+        game_instruction.append(font.render("Select items that ", True, BLACK))
+        game_instruction.append(font.render("will have maximum", True, BLACK))
+        game_instruction.append(font.render("overall weight with a", True, BLACK))
+        game_instruction.append(font.render("given volume", True, BLACK))
+        for i in range(len(game_instruction)):
+            screen.blit(game_instruction[i], [500 + 10, i * 30])
 
         # game information
         if self.my_player.get_weight() == self.solution:
@@ -924,7 +936,7 @@ class Puzzle3(Puzzle):  # knapsack problem
                 item.deselect()
             self.my_player.reset()
 
-    def display_solution(self):
+    def display_solution(self):  # called when the solution is pressed
         if self.solution_button.is_pressed():
             for s in self.solution_list:
                 Puzzle3.item_list[s-1].highlight(RED)
@@ -937,19 +949,17 @@ class Puzzle3(Puzzle):  # knapsack problem
         all_sprites_group.draw(screen)
 
 
-
 done = False
-
 curPuzzle = PuzzleSelection()
 curPuzzle.pre_update()
 
-while not done:
+while not done:  # the main program loop
     for event in pg.event.get():
         if event.type == pg.QUIT:
             done=True
-        elif event.type == pg.KEYDOWN:
+        elif event.type == pg.KEYDOWN:  # if the key is pressed
             curPuzzle.my_player.tracking_event(event.key)
-        elif event.type == pg.MOUSEBUTTONDOWN:
+        elif event.type == pg.MOUSEBUTTONDOWN:  # if the mouse is pressed
             curPuzzle.my_player.tracking_event(event.button)
 
     screen.fill(WHITE)
