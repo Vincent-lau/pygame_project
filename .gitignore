@@ -1,6 +1,17 @@
+# file for internal use #
 test.py
+moving_man.py
+
+# OS_generated sources #
 .DS_Store
+
+
+# Exam Board Material #
 170844-specification-accredited-a-level-gce-computer-science-h446.pdf
 CS Project Board High Level Example.pdf
-~$oject_write-up.docx
+Computer Science Project Proposal Template.docx
+
+# write-up material #
+design_picture/
+
 
